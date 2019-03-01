@@ -1,0 +1,20 @@
+{
+  "name": "kyul",
+  "version": "0.1.0",
+  "description": "K Semantics of Yul - The Intermediate Language for Ethereum.",
+  "main": "index.js",
+  "author": "Emilio Almansi",
+  "license": "MIT",
+  "scripts": {
+    "kompile": "kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
+    "krun": "krun --output pretty --directory src/yul/",
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "glob": "7.1.3",
+    "mocha": "6.0.2",
+    "shelljs": "0.8.3",
+    "tmp": "0.0.33",
+    "xml2js": "0.4.19"
+  }
+}
