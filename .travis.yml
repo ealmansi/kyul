@@ -8,3 +8,6 @@ services:
 
 before_install:
   - docker pull ealmansi/k-in-a-box
+
+before_script:
+  - yarn build
