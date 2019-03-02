@@ -6,8 +6,10 @@
   "author": "Emilio Almansi",
   "license": "MIT",
   "scripts": {
-    "kompile": "kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
-    "krun": "krun --output pretty --directory src/yul/",
+    "build": "yarn kompile",
+    "kompile": "bin/kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
+    "kprove": "bin/kprove --directory src/yul/ --def-module YUL",
+    "krun": "bin/krun --directory src/yul/",
     "test": "mocha"
   },
   "devDependencies": {
