@@ -7,9 +7,9 @@
   "license": "MIT",
   "scripts": {
     "build": "yarn kompile",
-    "kompile": "bin/kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
-    "kprove": "bin/kprove --directory src/yul/ --def-module YUL",
-    "krun": "bin/krun --directory src/yul/",
+    "kompile": "kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
+    "kprove": "kprove --directory src/yul/ --def-module YUL",
+    "krun": "krun --directory src/yul/",
     "test": "mocha"
   },
   "devDependencies": {

@@ -8,6 +8,7 @@ services:
 
 before_install:
   - docker pull ealmansi/k-in-a-box
+  - export PATH="$PATH:$TRAVIS_BUILD_DIR/bin"
 
 before_script:
   - yarn build
