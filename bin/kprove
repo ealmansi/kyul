@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+eval "docker run -v $(pwd):/usr/workspace -t ealmansi/k-in-a-box /bin/bash -ci 'kprove $@'"
