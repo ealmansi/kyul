@@ -12,7 +12,7 @@ module YUL-UTILITY
     "#EvaluateExpressionsCool" ExpressionList |
     "#EvaluateExpressionsHeat" ExpressionList |
     "#EvaluateExpressionsMerge" Value |
-    "#IsFunctionDefinition" S:Statement
+    "#IsFunctionDefinition" Statement
 
   /**
    * EvaluateExpressions
