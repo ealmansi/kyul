@@ -1,13 +1,13 @@
 require "../../yul-configuration/yul-configuration.k"
+require "../../yul-execution/yul-execution.k"
 require "../../yul-syntax/yul-syntax.k"
-require "../../yul-utility/yul-utility.k"
 require "../../yul-value/yul-value.k"
 
 module YUL-BUILT-IN-TYPE-CONVERSION
   imports DOMAINS
   imports YUL-CONFIGURATION
+  imports YUL-EXECUTION
   imports YUL-SYNTAX
-  imports YUL-UTILITY
   imports YUL-VALUE
 
   syntax KItem ::=

@@ -6,15 +6,9 @@ module YUL-CONFIGURATION
   imports YUL-AST
   imports YUL-SYNTAX
 
-  syntax KItem ::=
-    "#Execute" Ast
-
   configuration
     <T>
-      <k> #Execute toAstProgram($PGM:Program) </k>
-      <cRules> .Set </cRules>
-      <cStdout stream="stdout"> .List </cStdout>
-      <cDebug> .List </cDebug>
+      <k> $PGM:Program </k>
       <cSymbolTableStack>
         <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
         <cSymbolTable multiplicity="*">

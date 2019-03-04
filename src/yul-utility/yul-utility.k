@@ -10,70 +10,6 @@ module YUL-UTILITY
   imports YUL-SYNTAX
   imports YUL-VALUE
 
-  syntax KItem ::=
-    "#ExecuteFunctionArguments" AstExpressionList |
-    "#ExecuteFunctionArgumentsRecursive" AstExpressionList ValueSequence |
-    "#ExecuteFunctionArgumentsRecursiveCool" AstExpressionList ValueSequence |
-    "#IsFunctionDefinition" AstStatement
-
-  /**
-   * ExecuteFunctionArguments
-   */
-
-  rule
-    <k>
-      #ExecuteFunctionArguments EL =>
-      #ExecuteFunctionArgumentsRecursive reverseList(EL) .ValueSequence
-      ...
-    </k>
-
-  rule
-    <k>
-      #ExecuteFunctionArgumentsRecursive .List VS =>
-      VS
-      ...
-    </k>
-
-  rule
-    <k>
-      #ExecuteFunctionArgumentsRecursive (ListItem(E) EL) VS =>
-      #Execute E ~> #ExecuteFunctionArgumentsRecursiveCool EL VS
-      ...
-    </k>
-
-  rule
-    <k>
-      V .ValueSequence ~> #ExecuteFunctionArgumentsRecursiveCool EL VS =>
-      #ExecuteFunctionArgumentsRecursive EL (V VS)
-      ...
-    </k>
-
-  /**
-   * reverseList
-   */
-
-  syntax List ::=
-    reverseList(List) [function]
-
-  rule reverseList(.List) =>
-    .List
-
-  rule reverseList(ListItem(H) L) =>
-    reverseList(L) ListItem(H)
-
-  /**
-   * reverseValueSequence
-   */
-
-  syntax ValueSequence ::=
-    reverseValueSequence(ValueSequence) [function]
-
-  rule reverseValueSequence(.ValueSequence) =>
-    .ValueSequence
-
-  rule reverseValueSequence(V VS) =>
-    appendValueToSequence(reverseValueSequence(VS), V)
-
   /**
    * appendValueToSequence
    */
@@ -90,6 +26,9 @@ module YUL-UTILITY
   /**
    * IsFunctionDefinition
    */
+
+  syntax KItem ::=
+    "#IsFunctionDefinition" AstStatement
 
   rule
     <k>
@@ -167,5 +106,31 @@ module YUL-UTILITY
       false
       ...
     </k>
+
+  /**
+   * reverseList
+   */
+
+  syntax List ::=
+    reverseList(List) [function]
+
+  rule reverseList(.List) =>
+    .List
+
+  rule reverseList(ListItem(H) L) =>
+    reverseList(L) ListItem(H)
+
+  /**
+   * reverseValueSequence
+   */
+
+  syntax ValueSequence ::=
+    reverseValueSequence(ValueSequence) [function]
+
+  rule reverseValueSequence(.ValueSequence) =>
+    .ValueSequence
+
+  rule reverseValueSequence(V VS) =>
+    appendValueToSequence(reverseValueSequence(VS), V)
 
 endmodule
