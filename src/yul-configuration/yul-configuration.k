@@ -6,9 +6,14 @@ module YUL-CONFIGURATION
   imports YUL-AST
   imports YUL-SYNTAX
 
+  syntax Mode ::=
+    "AST" [klabel(AST), symbol] |
+    "EXECUTION" [klabel(EXECUTION), symbol]
+
   configuration
     <T>
       <k> $PGM:Program </k>
+      <cMode> $MODE:Mode </cMode>
       <cSymbolTableStack>
         <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
         <cSymbolTable multiplicity="*">

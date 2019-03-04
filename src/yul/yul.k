@@ -15,7 +15,15 @@ module YUL
   rule
     <k>
       P:Program =>
+      toAstProgram(P)
+    </k>
+    <cMode> AST </cMode>
+
+  rule
+    <k>
+      P:Program =>
       #Execute toAstProgram(P)
     </k>
+    <cMode> EXECUTION </cMode>
 
 endmodule

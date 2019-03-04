@@ -23,7 +23,7 @@ async function krun (yul) {
   const file = tmp.fileSync({ dir: TEMP_DIR })
   fs.writeFileSync(file.name, yul.trim())
   const { code, stdout, stderr } = shell.exec(
-    `krun --output pretty --directory ${YUL_DEFINITION_DIR}/ ${file.name}`,
+    `krun --output pretty --directory ${YUL_DEFINITION_DIR}/ -cMODE=EXECUTION ${file.name}`,
     { silent:true }
   )
   assert.deepEqual(code, 0, stdout || stderr)
