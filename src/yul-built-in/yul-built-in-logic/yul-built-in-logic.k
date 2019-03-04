@@ -11,16 +11,16 @@ module YUL-BUILT-IN-LOGIC
   imports YUL-VALUE
 
   syntax KItem ::=
-    "#BuiltInAnd" ExpressionList |
-    "#BuiltInAndCool1" Expression |
+    "#BuiltInAnd" AstExpressionList |
+    "#BuiltInAndCool1" AstExpression |
     "#BuiltInAndCool2" |
-    "#BuiltInNot" ExpressionList |
+    "#BuiltInNot" AstExpressionList |
     "#BuiltInNotCool" |
-    "#BuiltInOr" ExpressionList |
-    "#BuiltInOrCool1" Expression |
+    "#BuiltInOr" AstExpressionList |
+    "#BuiltInOrCool1" AstExpression |
     "#BuiltInOrCool2" |
-    "#BuiltInXor" ExpressionList |
-    "#BuiltInXorCool1" Expression |
+    "#BuiltInXor" AstExpressionList |
+    "#BuiltInXorCool1" AstExpression |
     "#BuiltInXorCool2"
 
   /**
@@ -29,37 +29,37 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
+      #Execute AstFunctionCall(I, EL) =>
       #BuiltInAnd EL
       ...
     </k>
-    requires I ==K String2Id("and")
+    requires I ==K AstIdentifier(String2Id("and"))
 
   rule
     <k>
-      #BuiltInAnd (E1 , E2):ExpressionList =>
-      E1 ~> #BuiltInAndCool1 E2
+      #BuiltInAnd (ListItem(E1) ListItem(E2) .List) =>
+      #Execute E1 ~> #BuiltInAndCool1 E2
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool true) ~> #BuiltInAndCool1 E:Expression =>
-      E ~> #BuiltInAndCool2
+      (#ValueBool true) .ValueSequence ~> #BuiltInAndCool1 E =>
+      #Execute E ~> #BuiltInAndCool2
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool B) ~> #BuiltInAndCool2 =>
-      .ValueSequence (#ValueBool B)
+      (#ValueBool B) .ValueSequence ~> #BuiltInAndCool2 =>
+      (#ValueBool B) .ValueSequence
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool false) ~> #BuiltInAndCool1 E:Expression =>
-      .ValueSequence (#ValueBool false)
+      (#ValueBool false) .ValueSequence ~> #BuiltInAndCool1 E =>
+      (#ValueBool false) .ValueSequence
       ...
     </k>
 
@@ -69,23 +69,23 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
+      #Execute AstFunctionCall(I, EL) =>
       #BuiltInNot EL
       ...
     </k>
-    requires I ==K String2Id("not")
+    requires I ==K AstIdentifier(String2Id("not"))
 
   rule
     <k>
-      #BuiltInNot E:Expression =>
-      E ~> #BuiltInNotCool
+      #BuiltInNot (ListItem(E) .List) =>
+      #Execute E ~> #BuiltInNotCool
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool B) ~> #BuiltInNotCool =>
-      .ValueSequence (#ValueBool (notBool B))
+      (#ValueBool B) .ValueSequence ~> #BuiltInNotCool =>
+      (#ValueBool (notBool B)) .ValueSequence
       ...
     </k>
 
@@ -95,37 +95,37 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
+      #Execute AstFunctionCall(I, EL) =>
       #BuiltInOr EL
       ...
     </k>
-    requires I ==K String2Id("or")
+    requires I ==K AstIdentifier(String2Id("or"))
 
   rule
     <k>
-      #BuiltInOr (E1 , E2):ExpressionList =>
-      E1 ~> #BuiltInOrCool1 E2
+      #BuiltInOr (ListItem(E1) ListItem(E2) .List) =>
+      #Execute E1 ~> #BuiltInOrCool1 E2
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool true) ~> #BuiltInOrCool1 E:Expression =>
-      .ValueSequence (#ValueBool true)
+      (#ValueBool true) .ValueSequence ~> #BuiltInOrCool1 E =>
+      (#ValueBool true) .ValueSequence
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool false) ~> #BuiltInOrCool1 E:Expression =>
-      E ~> #BuiltInOrCool2
+      (#ValueBool false) .ValueSequence ~> #BuiltInOrCool1 E =>
+      #Execute E ~> #BuiltInOrCool2
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool B) ~> #BuiltInOrCool2 =>
-      .ValueSequence (#ValueBool B)
+      (#ValueBool B) .ValueSequence ~> #BuiltInOrCool2 =>
+      (#ValueBool B) .ValueSequence
       ...
     </k>
 
@@ -135,30 +135,30 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
+      #Execute AstFunctionCall(I, EL) =>
       #BuiltInXor EL
       ...
     </k>
-    requires I ==K String2Id("xor")
+    requires I ==K AstIdentifier(String2Id("xor"))
 
   rule
     <k>
-      #BuiltInXor (E1 , E2):ExpressionList =>
-      E1 ~> #BuiltInXorCool1 E2
+      #BuiltInXor (ListItem(E1) ListItem(E2) .List) =>
+      #Execute E1 ~> #BuiltInXorCool1 E2
       ...
     </k>
 
   rule
     <k>
-      VS:ValueSequence ~> #BuiltInXorCool1 E:Expression =>
-      E ~> VS ~> #BuiltInXorCool2
+      VS:ValueSequence ~> #BuiltInXorCool1 E =>
+      #Execute E ~> VS ~> #BuiltInXorCool2
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence (#ValueBool B1) ~> .ValueSequence (#ValueBool B2) ~> #BuiltInXorCool2 =>
-      .ValueSequence (#ValueBool (B1 xorBool B2))
+      (#ValueBool B1) .ValueSequence ~> (#ValueBool B2) .ValueSequence ~> #BuiltInXorCool2 =>
+      (#ValueBool (B1 xorBool B2)) .ValueSequence
       ...
     </k>
 

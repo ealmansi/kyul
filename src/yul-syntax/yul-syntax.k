@@ -187,17 +187,17 @@ module YUL-SYNTAX
     TypeNameBuiltIn
 
   syntax TypeNameBuiltIn ::=
-    "bool" |
-    "u8" |
-    "u32" |
-    "u64" |
-    "u128" |
-    "u256"|
-    "s8" |
-    "s32" |
-    "s64" |
-    "s128" |
-    "s256"
+    "bool" [token] |
+    "u8" [token] |
+    "u32" [token] |
+    "u64" [token] |
+    "u128" [token] |
+    "u256" [token] |
+    "s8" [token] |
+    "s32" [token] |
+    "s64" [token] |
+    "s128" [token] |
+    "s256" [token]
 
   syntax VariableDeclaration ::=
     "let" TypedIdentifierList

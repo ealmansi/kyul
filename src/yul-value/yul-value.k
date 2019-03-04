@@ -21,85 +21,85 @@ module YUL-VALUE
 
   syntax ValueSequence ::=
     ".ValueSequence" |
-    ValueSequence Value
+    Value ValueSequence
 
   syntax KItem ::=
-    "#DefaultValue" TypeName |
+    "#DefaultValue" AstTypeName |
     ValueSequence
 
   rule
     <k>
-      #DefaultValue bool =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( bool ) )) =>
       #ValueBool false
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue u8 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u8 ) )) =>
       #ValueU8 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue u32 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u32 ) )) =>
       #ValueU32 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue u64 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u64 ) )) =>
       #ValueU64 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue u128 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u128 ) )) =>
       #ValueU128 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue u256 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u256 ) )) =>
       #ValueU256 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue s8 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s8 ) )) =>
       #ValueS8 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue s32 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s32 ) )) =>
       #ValueS32 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue s64 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s64 ) )) =>
       #ValueS64 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue s128 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s128 ) )) =>
       #ValueS128 0
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue s256 =>
+      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s256 ) )) =>
       #ValueS256 0
       ...
     </k>

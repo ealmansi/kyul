@@ -35,23 +35,24 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * booltos256(x:bool) -> y:s256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInBoolToS256
-      ...
-    </k>
-    requires I ==K String2Id("booltos256")
 
   rule
     <k>
-      .ValueSequence (#ValueBool B:Bool) ~> #BuiltInBoolToS256 =>
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInBoolToS256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("booltos256"))
+
+  rule
+    <k>
+      (#ValueBool B) .ValueSequence ~> #BuiltInBoolToS256 =>
       (
         #if B
         #then
-          .ValueSequence (#ValueS256 1)
+          (#ValueS256 1) .ValueSequence
         #else
-          .ValueSequence (#ValueS256 0)
+          (#ValueS256 0) .ValueSequence
         #fi
       )
       ...
@@ -60,23 +61,24 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * booltou256(x:bool) -> y:u256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInBoolToU256
-      ...
-    </k>
-    requires I ==K String2Id("booltou256")
 
   rule
     <k>
-      .ValueSequence (#ValueBool B:Bool) ~> #BuiltInBoolToU256 =>
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInBoolToU256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("booltou256"))
+
+  rule
+    <k>
+      (#ValueBool B) .ValueSequence ~> #BuiltInBoolToU256 =>
       (
         #if B
         #then
-          .ValueSequence (#ValueU256 1)
+          (#ValueU256 1) .ValueSequence
         #else
-          .ValueSequence (#ValueU256 0)
+          (#ValueU256 0) .ValueSequence
         #fi
       )
       ...
@@ -85,23 +87,24 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * booltou32(x:bool) -> y:u32
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInBoolToU32
-      ...
-    </k>
-    requires I ==K String2Id("booltou32")
 
   rule
     <k>
-      .ValueSequence (#ValueBool B:Bool) ~> #BuiltInBoolToU32 =>
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInBoolToU32
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("booltou32"))
+
+  rule
+    <k>
+      (#ValueBool B) .ValueSequence ~> #BuiltInBoolToU32 =>
       (
         #if B
         #then
-          .ValueSequence (#ValueU32 1)
+          (#ValueU32 1) .ValueSequence
         #else
-          .ValueSequence (#ValueU32 0)
+          (#ValueU32 0) .ValueSequence
         #fi
       )
       ...
@@ -110,23 +113,24 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * booltou64(x:bool) -> y:u64
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInBoolToU64
-      ...
-    </k>
-    requires I ==K String2Id("booltou64")
 
   rule
     <k>
-      .ValueSequence (#ValueBool B:Bool) ~> #BuiltInBoolToU64 =>
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInBoolToU64
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("booltou64"))
+
+  rule
+    <k>
+      (#ValueBool B) .ValueSequence ~> #BuiltInBoolToU64 =>
       (
         #if B
         #then
-          .ValueSequence (#ValueU64 1)
+          (#ValueU64 1) .ValueSequence
         #else
-          .ValueSequence (#ValueU64 0)
+          (#ValueU64 0) .ValueSequence
         #fi
       )
       ...
@@ -135,126 +139,118 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * s256tobool(x:s256) -> y:bool
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInS256ToBool
-      ...
-    </k>
-    requires I ==K String2Id("s256tobool")
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I:Int) ~> #BuiltInS256ToBool =>
-      (
-        #if I ==Int 0
-        #then
-          .ValueSequence (#ValueBool false)
-        #else
-          .ValueSequence (#ValueBool true)
-        #fi
-      )
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInS256ToBool
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("s256tobool"))
+
+  rule
+    <k>
+      (#ValueS256 I) .ValueSequence ~> #BuiltInS256ToBool =>
+      (#ValueBool (I =/=Int 0)) .ValueSequence
       ...
     </k>
 
   /**
    * s256tou256(x:s256) -> y:u256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInS256ToU256
-      ...
-    </k>
-    requires I ==K String2Id("s256tou256")
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I:Int) ~> #BuiltInS256ToU256 =>
-      .ValueSequence (#ValueU256 (I modInt (2 ^Int 256)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInS256ToU256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("s256tou256"))
+
+  rule
+    <k>
+      (#ValueS256 I) .ValueSequence ~> #BuiltInS256ToU256 =>
+      (#ValueU256 (I modInt (2 ^Int 256))) .ValueSequence
       ...
     </k>
 
   /**
    * s256tou32(x:s256) -> y:u32
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInS256ToU32
-      ...
-    </k>
-    requires I ==K String2Id("s256tou32")
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I:Int) ~> #BuiltInS256ToU32 =>
-      .ValueSequence (#ValueU32 (I modInt (2 ^Int 32)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInS256ToU32
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("s256tou32"))
+
+  rule
+    <k>
+      (#ValueS256 I) .ValueSequence ~> #BuiltInS256ToU32 =>
+      (#ValueU32 (I modInt (2 ^Int 32))) .ValueSequence
       ...
     </k>
 
   /**
    * s256tou64(x:s256) -> y:u64
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInS256ToU64
-      ...
-    </k>
-    requires I ==K String2Id("s256tou64")
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I:Int) ~> #BuiltInS256ToU64 =>
-      .ValueSequence (#ValueU64 (I modInt (2 ^Int 64)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInS256ToU64
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("s256tou64"))
+
+  rule
+    <k>
+      (#ValueS256 I) .ValueSequence ~> #BuiltInS256ToU64 =>
+      (#ValueU64 (I modInt (2 ^Int 64))) .ValueSequence
       ...
     </k>
 
   /**
    * u256tobool(x:u256) -> y:bool
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU256ToBool
-      ...
-    </k>
-    requires I ==K String2Id("u256tobool")
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I:Int) ~> #BuiltInU256ToBool =>
-      (
-        #if I ==Int 0
-        #then
-          .ValueSequence (#ValueBool false)
-        #else
-          .ValueSequence (#ValueBool true)
-        #fi
-      )
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU256ToBool
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u256tobool"))
+
+  rule
+    <k>
+      (#ValueU256 I) .ValueSequence ~> #BuiltInU256ToBool =>
+      (#ValueBool (I =/=Int 0)) .ValueSequence
       ...
     </k>
 
   /**
    * u256tos256(x:u256) -> y:s256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU256ToS256
-      ...
-    </k>
-    requires I ==K String2Id("u256tos256")
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I:Int) ~> #BuiltInU256ToS256 =>
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU256ToS256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u256tos256"))
+
+  rule
+    <k>
+      (#ValueU256 I) .ValueSequence ~> #BuiltInU256ToS256 =>
       #if I <Int (2 ^Int 255)
       #then
-        .ValueSequence (#ValueS256 I)
+        (#ValueS256 I) .ValueSequence
       #else
-        .ValueSequence (#ValueS256 (I -Int (2 ^Int 256)))
+        (#ValueS256 (I -Int (2 ^Int 256))) .ValueSequence
       #fi
       ...
     </k>
@@ -262,194 +258,190 @@ module YUL-BUILT-IN-TYPE-CONVERSION
   /**
    * u256tou32(x:u256) -> y:u32
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU256ToU32
-      ...
-    </k>
-    requires I ==K String2Id("u256tou32")
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I:Int) ~> #BuiltInU256ToU32 =>
-      .ValueSequence (#ValueU32 (I modInt (2 ^Int 32)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU256ToU32
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u256tou32"))
+
+  rule
+    <k>
+      (#ValueU256 I) .ValueSequence ~> #BuiltInU256ToU32 =>
+      (#ValueU32 (I modInt (2 ^Int 32))) .ValueSequence
       ...
     </k>
 
   /**
    * u256tou64(x:u256) -> y:u64
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU256ToU64
-      ...
-    </k>
-    requires I ==K String2Id("u256tou64")
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I:Int) ~> #BuiltInU256ToU64 =>
-      .ValueSequence (#ValueU64 (I modInt (2 ^Int 64)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU256ToU64
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u256tou64"))
+
+  rule
+    <k>
+      (#ValueU256 I) .ValueSequence ~> #BuiltInU256ToU64 =>
+      (#ValueU64 (I modInt (2 ^Int 64))) .ValueSequence
       ...
     </k>
 
   /**
    * u32tobool(x:u32) -> y:bool
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU32ToBool
-      ...
-    </k>
-    requires I ==K String2Id("u32tobool")
 
   rule
     <k>
-      .ValueSequence (#ValueU32 I:Int) ~> #BuiltInU32ToBool =>
-      (
-        #if I ==Int 0
-        #then
-          .ValueSequence (#ValueBool false)
-        #else
-          .ValueSequence (#ValueBool true)
-        #fi
-      )
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU32ToBool
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u32tobool"))
+
+  rule
+    <k>
+      (#ValueU32 I) .ValueSequence ~> #BuiltInU32ToBool =>
+      (#ValueBool (I =/=Int 0)) .ValueSequence
       ...
     </k>
 
   /**
    * u32tos256(x:u32) -> y:s256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU32ToS256
-      ...
-    </k>
-    requires I ==K String2Id("u32tos256")
 
   rule
     <k>
-      .ValueSequence (#ValueU32 I:Int) ~> #BuiltInU32ToS256 =>
-      .ValueSequence (#ValueS256 I)
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU32ToS256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u32tos256"))
+
+  rule
+    <k>
+      (#ValueU32 I) .ValueSequence ~> #BuiltInU32ToS256 =>
+      (#ValueS256 I) .ValueSequence
       ...
     </k>
 
   /**
    * u32tou256(x:u32) -> y:u256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU32ToU256
-      ...
-    </k>
-    requires I ==K String2Id("u32tou256")
 
   rule
     <k>
-      .ValueSequence (#ValueU32 I:Int) ~> #BuiltInU32ToU256 =>
-      .ValueSequence (#ValueU256 I)
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU32ToU256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u32tou256"))
+
+  rule
+    <k>
+      (#ValueU32 I) .ValueSequence ~> #BuiltInU32ToU256 =>
+      (#ValueU256 I) .ValueSequence
       ...
     </k>
 
   /**
    * u32tou64(x:u32) -> y:u64
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU32ToU64
-      ...
-    </k>
-    requires I ==K String2Id("u32tou64")
 
   rule
     <k>
-      .ValueSequence (#ValueU32 I:Int) ~> #BuiltInU32ToU64 =>
-      .ValueSequence (#ValueU64 I)
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU32ToU64
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u32tou64"))
+
+  rule
+    <k>
+      (#ValueU32 I) .ValueSequence ~> #BuiltInU32ToU64 =>
+      (#ValueU64 I) .ValueSequence
       ...
     </k>
 
   /**
    * u64tobool(x:u64) -> y:bool
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU64ToBool
-      ...
-    </k>
-    requires I ==K String2Id("u64tobool")
 
   rule
     <k>
-      .ValueSequence (#ValueU64 I:Int) ~> #BuiltInU64ToBool =>
-      (
-        #if I ==Int 0
-        #then
-          .ValueSequence (#ValueBool false)
-        #else
-          .ValueSequence (#ValueBool true)
-        #fi
-      )
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU64ToBool
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u64tobool"))
+
+  rule
+    <k>
+      (#ValueU64 I) .ValueSequence ~> #BuiltInU64ToBool =>
+      (#ValueBool (I =/=Int 0)) .ValueSequence
       ...
     </k>
 
   /**
    * u64tos256(x:u64) -> y:s256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU64ToS256
-      ...
-    </k>
-    requires I ==K String2Id("u64tos256")
 
   rule
     <k>
-      .ValueSequence (#ValueU64 I:Int) ~> #BuiltInU64ToS256 =>
-      .ValueSequence (#ValueS256 I)
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU64ToS256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u64tos256"))
+
+  rule
+    <k>
+      (#ValueU64 I) .ValueSequence ~> #BuiltInU64ToS256 =>
+      (#ValueS256 I) .ValueSequence
       ...
     </k>
 
   /**
    * u64tou256(x:u64) -> y:u256
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU64ToU256
-      ...
-    </k>
-    requires I ==K String2Id("u64tou256")
 
   rule
     <k>
-      .ValueSequence (#ValueU64 I:Int) ~> #BuiltInU64ToU256 =>
-      .ValueSequence (#ValueU256 I)
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU64ToU256
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u64tou256"))
+
+  rule
+    <k>
+      (#ValueU64 I) .ValueSequence ~> #BuiltInU64ToU256 =>
+      (#ValueU256 I) .ValueSequence
       ...
     </k>
 
   /**
    * u64tou32(x:u64) -> y:u32
    */
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInU64ToU32
-      ...
-    </k>
-    requires I ==K String2Id("u64tou32")
 
   rule
     <k>
-      .ValueSequence (#ValueU64 I:Int) ~> #BuiltInU64ToU32 =>
-      .ValueSequence (#ValueU32 (I modInt (2 ^Int 32)))
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInU64ToU32
+      ...
+    </k>
+    requires I ==K AstIdentifier(String2Id("u64tou32"))
+
+  rule
+    <k>
+      (#ValueU64 I) .ValueSequence ~> #BuiltInU64ToU32 =>
+      (#ValueU32 (I modInt (2 ^Int 32))) .ValueSequence
       ...
     </k>
 

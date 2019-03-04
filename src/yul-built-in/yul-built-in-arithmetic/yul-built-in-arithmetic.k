@@ -45,16 +45,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInAddModU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInAddModU256
         ...
       </k>
-      requires I ==K String2Id("addmodu256")
+      requires I ==K AstIdentifier(String2Id("addmodu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) ~> #BuiltInAddModU256 =>
-      .ValueSequence (#ValueU256 ((I1 +Int I2) modInt I3))
+      (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) .ValueSequence ~> #BuiltInAddModU256 =>
+      (#ValueU256 ((I1 +Int I2) modInt I3)) .ValueSequence
       ...
     </k>
 
@@ -66,16 +66,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInAddU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInAddU256
         ...
       </k>
-      requires I ==K String2Id("addu256")
+      requires I ==K AstIdentifier(String2Id("addu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInAddU256 =>
-      .ValueSequence #ValueU256 ((I1 +Int I2) modInt (2 ^Int 256))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInAddU256 =>
+      (#ValueU256 ((I1 +Int I2) modInt (2 ^Int 256))) .ValueSequence
       ...
     </k>
 
@@ -87,11 +87,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInAndU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInAndU256
         ...
       </k>
-      requires I ==K String2Id("andu256")
+      requires I ==K AstIdentifier(String2Id("andu256"))
 
   /**
   * byte(n:u256, x:u256) -> v:u256
@@ -101,16 +101,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInByte
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInByte
         ...
       </k>
-      requires I ==K String2Id("byte")
+      requires I ==K AstIdentifier(String2Id("byte"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInByte =>
-      .ValueSequence (#ValueU256 ((I2 /Int (256 ^Int (31 -Int I1))) modInt 256))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInByte =>
+      (#ValueU256 ((I2 /Int (256 ^Int (31 -Int I1))) modInt 256)) .ValueSequence
       ...
     </k>
     requires 0 <=Int I1 andBool I1 <=Int 31
@@ -123,16 +123,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInDivS256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInDivS256
         ...
       </k>
-      requires I ==K String2Id("divs256")
+      requires I ==K AstIdentifier(String2Id("divs256"))
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I1) (#ValueS256 I2) ~> #BuiltInDivS256 =>
-      .ValueSequence (#ValueS256 (I1 /Int I2))
+      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInDivS256 =>
+      (#ValueS256 (I1 /Int I2)) .ValueSequence
       ...
     </k>
 
@@ -144,16 +144,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInDivU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInDivU256
         ...
       </k>
-      requires I ==K String2Id("divu256")
+      requires I ==K AstIdentifier(String2Id("divu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInDivU256 =>
-      .ValueSequence (#ValueU256 (I1 /Int I2))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInDivU256 =>
+      (#ValueU256 (I1 /Int I2)) .ValueSequence
       ...
     </k>
 
@@ -165,16 +165,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInEqU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInEqU256
         ...
       </k>
-      requires I ==K String2Id("equ256")
+      requires I ==K AstIdentifier(String2Id("equ256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInEqU256 =>
-      .ValueSequence (#ValueBool (I1 ==Int I2))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInEqU256 =>
+      (#ValueBool (I1 ==Int I2)) .ValueSequence
       ...
     </k>
 
@@ -186,16 +186,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInExpU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInExpU256
         ...
       </k>
-      requires I ==K String2Id("expu256")
+      requires I ==K AstIdentifier(String2Id("expu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInExpU256 =>
-      .ValueSequence (#ValueU256 ((I1 ^Int I2) modInt (2 ^Int 256)))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInExpU256 =>
+      (#ValueU256 ((I1 ^Int I2) modInt (2 ^Int 256))) .ValueSequence
       ...
     </k>
 
@@ -207,16 +207,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInGtS256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInGtS256
         ...
       </k>
-      requires I ==K String2Id("gts256")
+      requires I ==K AstIdentifier(String2Id("gts256"))
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I1) (#ValueS256 I2) ~> #BuiltInGtS256 =>
-      .ValueSequence (#ValueBool (I1 >Int I2))
+      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInGtS256 =>
+      (#ValueBool (I1 >Int I2)) .ValueSequence
       ...
     </k>
 
@@ -228,16 +228,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInGtU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInGtU256
         ...
       </k>
-      requires I ==K String2Id("gtu256")
+      requires I ==K AstIdentifier(String2Id("gtu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInGtU256 =>
-      .ValueSequence (#ValueBool (I1 >Int I2))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInGtU256 =>
+      (#ValueBool (I1 >Int I2)) .ValueSequence
       ...
     </k>
 
@@ -249,16 +249,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInIsZeroU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInIsZeroU256
         ...
       </k>
-      requires I ==K String2Id("iszerou256")
+      requires I ==K AstIdentifier(String2Id("iszerou256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I) ~> #BuiltInIsZeroU256 =>
-      .ValueSequence (#ValueBool (I ==Int 0))
+      (#ValueU256 I) .ValueSequence ~> #BuiltInIsZeroU256 =>
+      (#ValueBool (I ==Int 0)) .ValueSequence
       ...
     </k>
 
@@ -270,16 +270,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInLtS256
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInLtS256
       ...
     </k>
-    requires I ==K String2Id("lts256")
+    requires I ==K AstIdentifier(String2Id("lts256"))
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I1) (#ValueS256 I2) ~> #BuiltInLtS256 =>
-      .ValueSequence (#ValueBool (I1 <Int I2))
+      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInLtS256 =>
+      (#ValueBool (I1 <Int I2)) .ValueSequence
       ...
     </k>
 
@@ -291,16 +291,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #EvaluateExpressionsHeat EL ~> #BuiltInLtU256
+      #Execute AstFunctionCall(I, EL) =>
+      #ExecuteFunctionArguments EL ~> #BuiltInLtU256
       ...
     </k>
-    requires I ==K String2Id("ltu256")
+    requires I ==K AstIdentifier(String2Id("ltu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInLtU256 =>
-      .ValueSequence (#ValueBool (I1 <Int I2))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInLtU256 =>
+      (#ValueBool (I1 <Int I2)) .ValueSequence
       ...
     </k>
 
@@ -312,16 +312,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInModS256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInModS256
         ...
       </k>
-      requires I ==K String2Id("mods256")
+      requires I ==K AstIdentifier(String2Id("mods256"))
 
   rule
     <k>
-      .ValueSequence (#ValueS256 I1) (#ValueS256 I2) ~> #BuiltInModS256 =>
-      .ValueSequence (#ValueS256 (I1 %Int I2))
+      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInModS256 =>
+      (#ValueS256 (I1 %Int I2)) .ValueSequence
       ...
     </k>
 
@@ -333,16 +333,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInModU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInModU256
         ...
       </k>
-      requires I ==K String2Id("modu256")
+      requires I ==K AstIdentifier(String2Id("modu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInModU256 =>
-      .ValueSequence (#ValueU256 (I1 modInt I2))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInModU256 =>
+      (#ValueU256 (I1 modInt I2)) .ValueSequence
       ...
     </k>
 
@@ -354,16 +354,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInMulModU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInMulModU256
         ...
       </k>
-      requires I ==K String2Id("mulmodu256")
+      requires I ==K AstIdentifier(String2Id("mulmodu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) ~> #BuiltInMulModU256 =>
-      .ValueSequence (#ValueU256 ((I1 *Int I2) modInt I3))
+      (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) .ValueSequence ~> #BuiltInMulModU256 =>
+      (#ValueU256 ((I1 *Int I2) modInt I3)) .ValueSequence
       ...
     </k>
 
@@ -375,16 +375,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInMulU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInMulU256
         ...
       </k>
-      requires I ==K String2Id("mulu256")
+      requires I ==K AstIdentifier(String2Id("mulu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInMulU256 =>
-      .ValueSequence (#ValueU256 ((I1 *Int I2) modInt (2 ^Int 256)))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInMulU256 =>
+      (#ValueU256 ((I1 *Int I2) modInt (2 ^Int 256))) .ValueSequence
       ...
     </k>
 
@@ -396,16 +396,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInNotU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInNotU256
         ...
       </k>
-      requires I ==K String2Id("notu256")
+      requires I ==K AstIdentifier(String2Id("notu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I) ~> #BuiltInNotU256 =>
-      .ValueSequence (#ValueU256 (((2 ^Int 256) -Int 1) -Int I))
+      (#ValueU256 I) .ValueSequence ~> #BuiltInNotU256 =>
+      (#ValueU256 (((2 ^Int 256) -Int 1) -Int I)) .ValueSequence
       ...
     </k>
 
@@ -417,11 +417,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInOrU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInOrU256
         ...
       </k>
-      requires I ==K String2Id("oru256")
+      requires I ==K AstIdentifier(String2Id("oru256"))
 
   /**
   * sars256(x:s256, y:u256) -> z:u256
@@ -431,11 +431,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInSarS256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInSarS256
         ...
       </k>
-      requires I ==K String2Id("sars256")
+      requires I ==K AstIdentifier(String2Id("sars256"))
 
   /**
   * shlu256(x:u256, y:u256) -> z:u256
@@ -445,11 +445,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInShlU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInShlU256
         ...
       </k>
-      requires I ==K String2Id("shlu256")
+      requires I ==K AstIdentifier(String2Id("shlu256"))
 
   /**
   * shru256(x:u256, y:u256) -> z:u256
@@ -459,11 +459,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInShrU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInShrU256
         ...
       </k>
-      requires I ==K String2Id("shru256")
+      requires I ==K AstIdentifier(String2Id("shru256"))
 
   /**
   * signextendu256(i:u256, x:u256) -> z:u256
@@ -473,11 +473,11 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInSignExtendU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInSignExtendU256
         ...
       </k>
-      requires I ==K String2Id("signextendu256")
+      requires I ==K AstIdentifier(String2Id("signextendu256"))
 
   /**
   * subu256(x:u256, y:u256) -> z:u256
@@ -487,16 +487,16 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInSubU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInSubU256
         ...
       </k>
-      requires I ==K String2Id("subu256")
+      requires I ==K AstIdentifier(String2Id("subu256"))
 
   rule
     <k>
-      .ValueSequence (#ValueU256 I1) (#ValueU256 I2) ~> #BuiltInSubU256 =>
-      .ValueSequence (#ValueU256 ((I1 -Int I2) modInt (2 ^Int 256)))
+      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInSubU256 =>
+      (#ValueU256 ((I1 -Int I2) modInt (2 ^Int 256))) .ValueSequence
       ...
     </k>
 
@@ -508,10 +508,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        I:Identifier ( EL:ExpressionList ) =>
-        #EvaluateExpressionsHeat EL ~> #BuiltInXorU256
+        #Execute AstFunctionCall(I, EL) =>
+        #ExecuteFunctionArguments EL ~> #BuiltInXorU256
         ...
       </k>
-      requires I ==K String2Id("xoru256")
+      requires I ==K AstIdentifier(String2Id("xoru256"))
 
 endmodule

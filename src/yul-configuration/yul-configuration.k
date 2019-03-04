@@ -1,20 +1,17 @@
+require "../yul-ast/yul-ast.k"
 require "../yul-syntax/yul-syntax.k"
 
 module YUL-CONFIGURATION
   imports DOMAINS
+  imports YUL-AST
   imports YUL-SYNTAX
 
   syntax KItem ::=
-    "#EnvironmentPop" |
-    "#EnvironmentPush" |
-    "#EnvironmentReplace" |
-    "#EnvironmentRestore" |
-    "#SymbolTablePop" |
-    "#SymbolTablePush"
+    "#Execute" Ast
 
   configuration
     <T>
-      <k> $PGM:Program </k>
+      <k> #Execute toAstProgram($PGM:Program) </k>
       <cRules> .Set </cRules>
       <cStdout stream="stdout"> .List </cStdout>
       <cDebug> .List </cDebug>
@@ -53,6 +50,14 @@ module YUL-CONFIGURATION
       </cEnvironmentStack>
       <cEnvironmentStackCopies> .List </cEnvironmentStackCopies>
     </T>
+
+  syntax KItem ::=
+    "#EnvironmentPop" |
+    "#EnvironmentPush" |
+    "#EnvironmentReplace" |
+    "#EnvironmentRestore" |
+    "#SymbolTablePop" |
+    "#SymbolTablePush"
 
   rule
     <k>

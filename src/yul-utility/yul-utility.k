@@ -1,50 +1,91 @@
+require "../yul-ast/yul-ast.k"
 require "../yul-configuration/yul-configuration.k"
 require "../yul-syntax/yul-syntax.k"
 require "../yul-value/yul-value.k"
 
 module YUL-UTILITY
   imports DOMAINS
+  imports YUL-AST
   imports YUL-CONFIGURATION
   imports YUL-SYNTAX
   imports YUL-VALUE
 
   syntax KItem ::=
-    "#EvaluateExpressionsCool" ExpressionList |
-    "#EvaluateExpressionsHeat" ExpressionList |
-    "#EvaluateExpressionsMerge" Value |
-    "#IsFunctionDefinition" Statement
+    "#ExecuteFunctionArguments" AstExpressionList |
+    "#ExecuteFunctionArgumentsRecursive" AstExpressionList ValueSequence |
+    "#ExecuteFunctionArgumentsRecursiveCool" AstExpressionList ValueSequence |
+    "#IsFunctionDefinition" AstStatement
 
   /**
-   * EvaluateExpressions
+   * ExecuteFunctionArguments
    */
 
   rule
     <k>
-      #EvaluateExpressionsHeat E:Expression =>
-      E
+      #ExecuteFunctionArguments EL =>
+      #ExecuteFunctionArgumentsRecursive reverseList(EL) .ValueSequence
       ...
     </k>
 
   rule
     <k>
-      #EvaluateExpressionsHeat (EL , E):ExpressionList =>
-      E ~> #EvaluateExpressionsCool EL
+      #ExecuteFunctionArgumentsRecursive .List VS =>
+      VS
       ...
     </k>
 
   rule
     <k>
-      .ValueSequence V:Value ~> #EvaluateExpressionsCool EL:ExpressionList =>
-      #EvaluateExpressionsHeat EL ~> #EvaluateExpressionsMerge V
+      #ExecuteFunctionArgumentsRecursive (ListItem(E) EL) VS =>
+      #Execute E ~> #ExecuteFunctionArgumentsRecursiveCool EL VS
       ...
     </k>
 
   rule
     <k>
-      VS:ValueSequence ~> #EvaluateExpressionsMerge V:Value =>
-      VS V
+      V .ValueSequence ~> #ExecuteFunctionArgumentsRecursiveCool EL VS =>
+      #ExecuteFunctionArgumentsRecursive EL (V VS)
       ...
     </k>
+
+  /**
+   * reverseList
+   */
+
+  syntax List ::=
+    reverseList(List) [function]
+
+  rule reverseList(.List) =>
+    .List
+
+  rule reverseList(ListItem(H) L) =>
+    reverseList(L) ListItem(H)
+
+  /**
+   * reverseValueSequence
+   */
+
+  syntax ValueSequence ::=
+    reverseValueSequence(ValueSequence) [function]
+
+  rule reverseValueSequence(.ValueSequence) =>
+    .ValueSequence
+
+  rule reverseValueSequence(V VS) =>
+    appendValueToSequence(reverseValueSequence(VS), V)
+
+  /**
+   * appendValueToSequence
+   */
+
+  syntax ValueSequence ::=
+    appendValueToSequence(ValueSequence, Value) [function]
+
+  rule appendValueToSequence(.ValueSequence, V) =>
+    V .ValueSequence
+
+  rule appendValueToSequence(V1 VS, V2) =>
+    V1 appendValueToSequence(VS, V2)
 
   /**
    * IsFunctionDefinition
@@ -52,77 +93,77 @@ module YUL-UTILITY
 
   rule
     <k>
-      #IsFunctionDefinition A:Assignment =>
+      #IsFunctionDefinition AstStatement(A:AstAssignment) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition B:Block =>
+      #IsFunctionDefinition AstStatement(B:AstBlock) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition B:Break =>
+      #IsFunctionDefinition AstStatement(B:AstBreak) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition C:Continue =>
+      #IsFunctionDefinition AstStatement(C:AstContinue) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition D:Debug =>
+      #IsFunctionDefinition AstStatement(D:AstDebug) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition E:Expression =>
+      #IsFunctionDefinition AstStatement(E:AstExpression) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition F:For =>
+      #IsFunctionDefinition AstStatement(F:AstFor) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition FD:FunctionDefinition =>
+      #IsFunctionDefinition AstStatement(FD:AstFunctionDefinition) =>
       true
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition I:If =>
+      #IsFunctionDefinition AstStatement(I:AstIf) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition S:Switch =>
+      #IsFunctionDefinition AstStatement(S:AstSwitch) =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition VD:VariableDeclaration =>
+      #IsFunctionDefinition AstStatement(VD:AstVariableDeclaration) =>
       false
       ...
     </k>

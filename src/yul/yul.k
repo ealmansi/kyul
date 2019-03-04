@@ -1,3 +1,4 @@
+require "../yul-ast/yul-ast.k"
 require "../yul-built-in/yul-built-in.k"
 require "../yul-configuration/yul-configuration.k"
 require "../yul-syntax/yul-syntax.k"
@@ -6,6 +7,7 @@ require "../yul-value/yul-value.k"
 
 module YUL
   imports DOMAINS
+  imports YUL-AST
   imports YUL-BUILT-IN
   imports YUL-CONFIGURATION
   imports YUL-SYNTAX
@@ -13,51 +15,43 @@ module YUL
   imports YUL-VALUE
 
   syntax KItem ::=
-    "#AssignmentCool" IdentifierList |
-    "#AssignmentHeat" IdentifierList Expression |
-    "#AssignmentMany" IdentifierList ValueSequence |
-    "#AssignmentOne" Identifier Value |
-    "#DefineFunction" Identifier Block |
-    "#DefineFunctionParameter" Identifier TypedIdentifier |
-    "#DefineFunctionReturnParameter" Identifier TypedIdentifier |
+    "#AssignmentCool" AstIdentifierList |
+    "#AssignmentHeat" AstIdentifierList AstExpression |
+    "#AssignmentRecursive" AstIdentifierList ValueSequence |
+    "#DefineFunction" AstIdentifier AstBlock |
+    "#DefineFunctionParameters" AstIdentifier AstTypedIdentifierList |
+    "#DefineFunctionReturnParameters" AstIdentifier AstTypedIdentifierList |
     "#ForBreak" |
     "#ForBreakMarker" |
     "#ForContinue" |
     "#ForContinueMarker" |
-    "#ForCool" Expression Block Block |
-    "#ForHeat" Expression Block Block |
-    "#FunctionCallArgumentsCool" ExpressionList |
-    "#FunctionCallArgumentsHeat" ExpressionList |
-    "#FunctionCallArgumentsMerge" Value |
-    "#FunctionCallCollectReturnValues" Identifier Int |
-    "#FunctionCallCollectReturnValuesRecursive" Identifier Int ValueSequence |
-    "#FunctionCallCool" Identifier |
-    "#FunctionCallDeclareArguments" Identifier Int ValueSequence |
-    "#FunctionCallDeclareReturnArguments" Identifier Int |
-    "#FunctionCallHeat" Identifier ExpressionList |
+    "#ForCool" AstExpression AstBlock AstBlock |
+    "#ForHeat" AstExpression AstBlock AstBlock |
+    "#FunctionCallCollectReturnValues" AstIdentifier Int |
+    "#FunctionCallCollectReturnValuesRecursive" AstIdentifier Int ValueSequence |
+    "#FunctionCallCool" AstIdentifier |
+    "#FunctionCallDeclareArguments" AstIdentifier Int ValueSequence |
+    "#FunctionCallDeclareReturnArguments" AstIdentifier Int |
+    "#FunctionCallHeat" AstIdentifier AstExpressionList |
     "#FunctionCallReturn" |
-    "#FunctionDefinition1" Identifier Block |
-    "#FunctionDefinition2" Identifier TypedIdentifierList Block |
-    "#FunctionDefinition3" Identifier TypedIdentifierList Block |
-    "#FunctionDefinition4" Identifier TypedIdentifierList TypedIdentifierList Block |
-    "#IfCool" Block |
-    "#IfHeat" Expression Block |
-    "#StatementSequenceHoist" StatementSequence |
-    "#StatementSequenceHoistCool1" Statement List List |
-    "#StatementSequenceHoistCool2" StatementSequence Statement List List |
-    "#StatementSequenceHoistHeat" StatementSequence List List |
-    "#StatementSequenceHoistReverse" List |
-    "#StatementSequenceHoistSpread" |
-    "#SwitchCase" Case |
-    "#SwitchCaseCompare" Block |
-    "#SwitchCaseSequence" CaseSequence |
-    "#SwitchDefault" Default |
-    "#SwitchDone" |
-    "#SwitchDoneMarker" |
-    "#VariableDeclaration" TypedIdentifierList |
-    "#VariableDeclarationCool" TypedIdentifierList |
-    "#VariableDeclarationMany" TypedIdentifierList ValueSequence |
-    "#VariableDeclarationOne" Identifier TypeName
+    "#IfCool" AstBlock |
+    "#IfHeat" AstExpression AstBlock |
+    "#ObjectOrDataSequenceSpread" AstObjectOrDataSequence |
+    "#StatementSequenceHoist" AstStatementSequence |
+    "#StatementSequenceHoistRecursive" AstStatementSequence List List |
+    "#StatementSequenceHoistRecursiveCool" AstStatement AstStatementSequence List List |
+    "#StatementSequenceHoistRecursiveHeat" AstStatement AstStatementSequence List List |
+    "#StatementSequenceHoistSpread" AstStatementSequence |
+    "#SwitchCool" AstCaseSequence AstDefault |
+    "#SwitchHeat" AstExpression AstCaseSequence AstDefault |
+    "#SwitchRecursive" Value AstCaseSequence AstDefault |
+    "#SwitchRecursiveCool" Value AstBlock AstCaseSequence AstDefault |
+    "#SwitchRecursiveHeat" AstTypedLiteral Value AstBlock AstCaseSequence AstDefault |
+    "#VariableDeclarationCool" AstTypedIdentifierList |
+    "#VariableDeclarationDefault" AstTypedIdentifierList |
+    "#VariableDeclarationHeat" AstExpression AstTypedIdentifierList |
+    "#VariableDeclarationMany" AstTypedIdentifierList ValueSequence |
+    "#VariableDeclarationOne" AstIdentifier AstTypeName
 
   /**
    * Assignment
@@ -65,51 +59,38 @@ module YUL
 
   rule
     <k>
-      IL:IdentifierList := E:Expression =>
+      #Execute AstAssignment(IL:AstIdentifierList, E) =>
       #AssignmentHeat IL E
       ...
     </k>
-    <cRules> ... .Set => SetItem("1") </cRules>
 
   rule
     <k>
-      #AssignmentHeat IL:IdentifierList E:Expression =>
-      E ~> #AssignmentCool IL
+      #AssignmentHeat IL:AstIdentifierList E =>
+      #Execute E ~> #AssignmentCool IL
       ...
     </k>
-    <cRules> ... .Set => SetItem("2") </cRules>
 
   rule
     <k>
-      VS:ValueSequence ~> #AssignmentCool IL:IdentifierList =>
-      #AssignmentMany IL VS
+      VS:ValueSequence ~> #AssignmentCool IL:AstIdentifierList =>
+      #AssignmentRecursive IL VS
       ...
     </k>
-    <cRules> ... .Set => SetItem("3") </cRules>
 
   rule
     <k>
-      #AssignmentMany I:Identifier (.ValueSequence V):ValueSequence =>
-      #AssignmentOne I V
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("4") </cRules>
-
-  rule
-    <k>
-      #AssignmentMany (IL , I):IdentifierList (VS V):ValueSequence =>
-      #AssignmentMany IL VS ~> #AssignmentOne I V
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("5") </cRules>
-
-  rule
-    <k>
-      #AssignmentOne I:Identifier V:Value =>
+      #AssignmentRecursive .List .ValueSequence =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("6") </cRules>
+
+  rule
+    <k>
+      #AssignmentRecursive (ListItem(I) IL):AstIdentifierList (V VS):ValueSequence =>
+      #AssignmentRecursive IL VS
+      ...
+    </k>
     <cVariable>
       <cVariableName> I </cVariableName>
       <cVariableValue> _ => V </cVariableValue>
@@ -122,15 +103,7 @@ module YUL
 
   rule
     <k>
-      { }:Block =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("7") </cRules>
-
-  rule
-    <k>
-      { SS:StatementSequence }:Block =>
+      #Execute AstBlock(SS:AstStatementSequence) =>
       (
         #SymbolTablePush ~>
         #EnvironmentPush ~>
@@ -140,430 +113,17 @@ module YUL
       )
       ...
     </k>
-    <cRules> ... .Set => SetItem("8") </cRules>
 
   /**
-   * Data
+   * Break
    */
 
   rule
     <k>
-      data LS:LiteralString LH:LiteralHex =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("9") </cRules>
-
-  rule
-    <k>
-      data LS1:LiteralString LS2:LiteralString =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("10") </cRules>
-
-  /**
-   * Expression > FunctionCall
-   */
-
-  rule
-    <k>
-      I:Identifier ( ) =>
-      .ValueSequence ~> #FunctionCallCool I
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("11") </cRules>
-    <cFunctionName> I </cFunctionName>
-
-  rule
-    <k>
-      I:Identifier ( EL:ExpressionList ) =>
-      #FunctionCallHeat I EL
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("12") </cRules>
-    <cFunctionName> I </cFunctionName>
-
-  rule
-    <k>
-      #FunctionCallHeat I:Identifier EL:ExpressionList =>
-      #FunctionCallArgumentsHeat EL ~> #FunctionCallCool I
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("13") </cRules>
-    <cFunctionName> I </cFunctionName>
-
-  rule
-    <k>
-      #FunctionCallArgumentsHeat E:Expression =>
-      E
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("14") </cRules>
-
-  rule
-    <k>
-      #FunctionCallArgumentsHeat (EL , E):ExpressionList =>
-      E ~> #FunctionCallArgumentsCool EL
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("15") </cRules>
-
-  rule
-    <k>
-      .ValueSequence V:Value ~> #FunctionCallArgumentsCool EL:ExpressionList =>
-      #FunctionCallArgumentsHeat EL ~> #FunctionCallArgumentsMerge V
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("16") </cRules>
-
-  rule
-    <k>
-      VS:ValueSequence ~> #FunctionCallArgumentsMerge V:Value =>
-      VS V
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("17") </cRules>
-
-  rule
-    <k>
-      VS:ValueSequence ~> #FunctionCallCool I:Identifier =>
-      (
-        #SymbolTablePush ~>
-        #EnvironmentReplace ~>
-        #EnvironmentPush ~>
-        #FunctionCallDeclareArguments I FA VS ~>
-        #FunctionCallDeclareReturnArguments I FRA ~>
-        FB ~>
-        #FunctionCallCollectReturnValues I FRA ~>
-        #FunctionCallReturn
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("18") </cRules>
-    <cFunction>
-      <cFunctionName> I </cFunctionName>
-      <cFunctionArity> FA </cFunctionArity>
-      <cFunctionBody> FB </cFunctionBody>
-      <cFunctionReturnArity> FRA </cFunctionReturnArity>
-      ...
-    </cFunction>
-
-  rule
-    <k>
-      #FunctionCallDeclareArguments I1:Identifier I2:Int VS:ValueSequence =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("19") </cRules>
-    <cFunctionName> I1 </cFunctionName>
-    requires I2 ==Int 0
-
-  rule
-    <k>
-      #FunctionCallDeclareArguments I1:Identifier I2:Int (VS V):ValueSequence =>
-      #FunctionCallDeclareArguments I1 (I2 -Int 1) VS ~>
-      V ~> #VariableDeclarationOne FPN FPT
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("20") </cRules>
-    <cFunction>
-      <cFunctionName> I1 </cFunctionName>
-      <cFunctionParameters>
-        <cFunctionParameterIndex> I2 -Int 1 </cFunctionParameterIndex>
-        <cFunctionParameterName> FPN </cFunctionParameterName>
-        <cFunctionParameterType> FPT </cFunctionParameterType>
-        ...
-      </cFunctionParameters>
-      ...
-    </cFunction>
-    requires I2 >Int 0
-
-  rule
-    <k>
-      #FunctionCallDeclareReturnArguments I1:Identifier I2:Int =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("21") </cRules>
-    <cFunctionName> I1 </cFunctionName>
-    requires I2 ==Int 0
-
-  rule
-    <k>
-      #FunctionCallDeclareReturnArguments I1:Identifier I2:Int =>
-      (
-        #FunctionCallDeclareReturnArguments I1 (I2 -Int 1) ~>
-        #DefaultValue FRPT ~> #VariableDeclarationOne FRPN FRPT
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("22") </cRules>
-    <cFunction>
-      <cFunctionName> I1 </cFunctionName>
-      <cFunctionReturnParameters>
-        <cFunctionReturnParameterIndex> I2 -Int 1 </cFunctionReturnParameterIndex>
-        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
-        <cFunctionReturnParameterType> FRPT </cFunctionReturnParameterType>
-        ...
-      </cFunctionReturnParameters>
-      ...
-    </cFunction>
-    requires I2 >Int 0
-
-  rule
-    <k>
-      #FunctionCallCollectReturnValues I1:Identifier I2:Int =>
-      #FunctionCallCollectReturnValuesRecursive I1 I2 .ValueSequence
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("23") </cRules>
-    <cFunctionName> I1 </cFunctionName>
-
-  rule
-    <k>
-      #FunctionCallCollectReturnValuesRecursive I1:Identifier I2:Int VS:ValueSequence =>
-      VS
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("24") </cRules>
-    <cFunctionName> I1 </cFunctionName>
-    requires I2 ==Int 0
-
-  rule
-    <k>
-      #FunctionCallCollectReturnValuesRecursive I1:Identifier I2:Int VS:ValueSequence =>
-      #FunctionCallCollectReturnValuesRecursive I1 (I2 -Int 1) (VS VV)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("25") </cRules>
-    <cFunction>
-      <cFunctionName> I1 </cFunctionName>
-      <cFunctionReturnParameters>
-        <cFunctionReturnParameterIndex> I2 -Int 1 </cFunctionReturnParameterIndex>
-        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
-        ...
-      </cFunctionReturnParameters>
-      ...
-    </cFunction>
-    <cVariable>
-      <cVariableName> FRPN </cVariableName>
-      <cVariableValue> VV </cVariableValue>
-      ...
-    </cVariable>
-    requires I2 >Int 0
-
-  rule
-    <k>
-      .ValueSequence ~> #FunctionCallReturn =>
-      (
-        #EnvironmentPop ~>
-        #EnvironmentRestore ~>
-        #SymbolTablePop
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("26") </cRules>
-
-  rule
-    <k>
-      (VS V):ValueSequence ~> #FunctionCallReturn =>
-      (
-        #EnvironmentPop ~>
-        #EnvironmentRestore ~>
-        #SymbolTablePop ~>
-        VS V
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("27") </cRules>
-
-  /**
-   * Expression > Identifier
-   */
-
-  rule
-    <k>
-      I:Identifier =>
-      .ValueSequence VV
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("28") </cRules>
-    <cVariable>
-      <cVariableName> I </cVariableName>
-      <cVariableValue> VV </cVariableValue>
-      ...
-    </cVariable>
-
-  /**
-   * Expression > TypedLiteral
-   */
-
-  rule
-    <k>
-      (I:Int : u8):TypedLiteral =>
-      .ValueSequence (#ValueU8 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("29") </cRules>
-    requires 0 <=Int I andBool I <Int (2 ^Int 8)
-
-  rule
-    <k>
-      (I:Int : u32):TypedLiteral =>
-      .ValueSequence (#ValueU32 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("30") </cRules>
-    requires 0 <=Int I andBool I <Int (2 ^Int 32)
-
-  rule
-    <k>
-      (I:Int : u64):TypedLiteral =>
-      .ValueSequence (#ValueU64 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("31") </cRules>
-    requires 0 <=Int I andBool I <Int (2 ^Int 64)
-
-  rule
-    <k>
-      (I:Int : u128):TypedLiteral =>
-      .ValueSequence (#ValueU128 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("32") </cRules>
-    requires 0 <=Int I andBool I <Int (2 ^Int 128)
-
-  rule
-    <k>
-      (I:Int : u256):TypedLiteral =>
-      .ValueSequence (#ValueU256 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("33") </cRules>
-    requires 0 <=Int I andBool I <Int (2 ^Int 256)
-
-  rule
-    <k>
-      (I:Int : s8):TypedLiteral =>
-      .ValueSequence (#ValueS8 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("34") </cRules>
-    requires (0 -Int (2 ^Int 7)) <=Int I andBool I <Int (2 ^Int 7)
-
-  rule
-    <k>
-      (I:Int : s32):TypedLiteral =>
-      .ValueSequence (#ValueS32 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("35") </cRules>
-    requires (0 -Int (2 ^Int 31)) <=Int I andBool I <Int (2 ^Int 31)
-
-  rule
-    <k>
-      (I:Int : s64):TypedLiteral =>
-      .ValueSequence (#ValueS64 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("36") </cRules>
-    requires (0 -Int (2 ^Int 63)) <=Int I andBool I <Int (2 ^Int 63)
-
-  rule
-    <k>
-      (I:Int : s128):TypedLiteral =>
-      .ValueSequence (#ValueS128 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("37") </cRules>
-    requires (0 -Int (2 ^Int 127)) <=Int I andBool I <Int (2 ^Int 127)
-
-  rule
-    <k>
-      (I:Int : s256):TypedLiteral =>
-      .ValueSequence (#ValueS256 I)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("38") </cRules>
-    requires (0 -Int (2 ^Int 255)) <=Int I andBool I <Int (2 ^Int 255)
-
-  rule
-    <k>
-      (B:Bool : bool):TypedLiteral =>
-      .ValueSequence (#ValueBool B)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("39") </cRules>
-
-  /**
-   * For
-   */
-
-  rule
-    <k>
-      for {} E:Expression B1:Block B2:Block =>
-      (
-        #ForHeat E B1 B2 ~>
-        #ForBreakMarker
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("40") </cRules>
-
-  rule
-    <k>
-      for { SS:StatementSequence } E:Expression B1:Block B2:Block =>
-      (
-        #SymbolTablePush ~>
-        #EnvironmentPush ~>
-        #StatementSequenceHoist SS ~>
-        #ForHeat E B1 B2 ~>
-        #ForBreakMarker ~>
-        #EnvironmentPop ~>
-        #SymbolTablePop
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("41") </cRules>
-
-  rule
-    <k>
-      #ForHeat E:Expression B1:Block B2:Block =>
-      E ~> #ForCool E B1 B2
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("42") </cRules>
-
-  rule
-    <k>
-      .ValueSequence (#ValueBool true) ~> #ForCool E:Expression B1:Block B2:Block =>
-      (
-        B2 ~>
-        #ForContinueMarker ~>
-        B1 ~>
-        #ForHeat E B1 B2
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("43") </cRules>
-
-  rule
-    <k>
-      .ValueSequence (#ValueBool false) ~> #ForCool E:Expression B1:Block B2:Block =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("44") </cRules>
-
-  rule
-    <k>
-      break:Break =>
+      #Execute AstBreak() =>
       #ForBreak
       ...
     </k>
-    <cRules> ... .Set => SetItem("45") </cRules>
 
   rule
     <k>
@@ -586,7 +146,6 @@ module YUL
       )
       ...
     </k>
-    <cRules> ... .Set => SetItem("46") </cRules>
 
   rule
     <k>
@@ -594,15 +153,28 @@ module YUL
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("47") </cRules>
+
+  /**
+   * Code
+   */
 
   rule
     <k>
-      continue:Continue =>
+      #Execute AstCode(B:AstBlock) =>
+      #Execute B
+      ...
+    </k>
+
+  /**
+   * Continue
+   */
+
+  rule
+    <k>
+      #Execute AstContinue() =>
       #ForContinue
       ...
     </k>
-    <cRules> ... .Set => SetItem("48") </cRules>
 
   rule
     <k>
@@ -625,7 +197,6 @@ module YUL
       )
       ...
     </k>
-    <cRules> ... .Set => SetItem("49") </cRules>
 
   rule
     <k>
@@ -633,7 +204,263 @@ module YUL
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("50") </cRules>
+
+  /**
+   * Data
+   */
+
+  rule
+    <k>
+      #Execute AstData(LS:AstLiteralString, LH:AstLiteralHex) =>
+      .
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstData(LS1:AstLiteralString, LS2:AstLiteralString) =>
+      .
+      ...
+    </k>
+
+  /**
+   * Expression
+   */
+
+  rule
+    <k>
+      #Execute AstExpression(FC:AstFunctionCall) =>
+      #Execute FC
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstExpression(I:AstIdentifier) =>
+      #Execute I
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstExpression(TL:AstTypedLiteral) =>
+      #Execute TL
+      ...
+    </k>
+
+  /**
+   * For
+   */
+
+  rule
+    <k>
+      #Execute AstFor(AstBlock(SS:AstStatementSequence), E:AstExpression, B1:AstBlock, B2:AstBlock) =>
+      (
+        #SymbolTablePush ~>
+        #EnvironmentPush ~>
+        #StatementSequenceHoist SS ~>
+        #ForHeat E B1 B2 ~>
+        #ForBreakMarker ~>
+        #EnvironmentPop ~>
+        #SymbolTablePop
+      )
+      ...
+    </k>
+
+  rule
+    <k>
+      #ForHeat E:AstExpression B1:AstBlock B2:AstBlock =>
+      #Execute E ~> #ForCool E B1 B2
+      ...
+    </k>
+
+  rule
+    <k>
+      (#ValueBool true) .ValueSequence ~> #ForCool E:AstExpression B1:AstBlock B2:AstBlock =>
+      (
+        #Execute B2 ~>
+        #ForContinueMarker ~>
+        #Execute B1 ~>
+        #ForHeat E B1 B2
+      )
+      ...
+    </k>
+
+  rule
+    <k>
+      (#ValueBool false) .ValueSequence ~> #ForCool E:AstExpression B1:AstBlock B2:AstBlock =>
+      .
+      ...
+    </k>
+
+  /**
+   * FunctionCall
+   */
+
+  rule
+    <k>
+      #Execute AstFunctionCall(I:AstIdentifier, EL:AstExpressionList) =>
+      #FunctionCallHeat I EL
+      ...
+    </k>
+    <cFunctionName> I </cFunctionName>
+
+  rule
+    <k>
+      #FunctionCallHeat I:AstIdentifier EL:AstExpressionList =>
+      #ExecuteFunctionArguments EL ~> #FunctionCallCool I
+      ...
+    </k>
+    <cFunctionName> I </cFunctionName>
+
+  rule
+    <k>
+      VS:ValueSequence ~> #FunctionCallCool I:AstIdentifier =>
+      (
+        #SymbolTablePush ~>
+        #EnvironmentReplace ~>
+        #EnvironmentPush ~>
+        #FunctionCallDeclareArguments I 0 VS ~>
+        #FunctionCallDeclareReturnArguments I 0 ~>
+        #Execute FB ~>
+        #FunctionCallCollectReturnValues I 0 ~>
+        #FunctionCallReturn
+      )
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I </cFunctionName>
+      <cFunctionBody> FB </cFunctionBody>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallDeclareArguments I1:AstIdentifier I2:Int .ValueSequence =>
+      .
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionArity> I2 </cFunctionArity>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallDeclareArguments I1:AstIdentifier I2:Int (V VS):ValueSequence =>
+      (
+        V ~> #VariableDeclarationOne FPN FPT ~>
+        #FunctionCallDeclareArguments I1 (I2 +Int 1) VS
+      )
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionParameters>
+        <cFunctionParameterIndex> I2 </cFunctionParameterIndex>
+        <cFunctionParameterName> FPN </cFunctionParameterName>
+        <cFunctionParameterType> FPT </cFunctionParameterType>
+        ...
+      </cFunctionParameters>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallDeclareReturnArguments I1:AstIdentifier I2:Int =>
+      .
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionReturnArity> I2 </cFunctionReturnArity>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallDeclareReturnArguments I1:AstIdentifier I2:Int =>
+      (
+        #DefaultValue FRPT ~> #VariableDeclarationOne FRPN FRPT ~>
+        #FunctionCallDeclareReturnArguments I1 (I2 +Int 1)
+      )
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionReturnParameters>
+        <cFunctionReturnParameterIndex> I2 </cFunctionReturnParameterIndex>
+        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
+        <cFunctionReturnParameterType> FRPT </cFunctionReturnParameterType>
+        ...
+      </cFunctionReturnParameters>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallCollectReturnValues I1:AstIdentifier I2:Int =>
+      #FunctionCallCollectReturnValuesRecursive I1 I2 .ValueSequence
+      ...
+    </k>
+    <cFunctionName> I1 </cFunctionName>
+
+  rule
+    <k>
+      #FunctionCallCollectReturnValuesRecursive I1:AstIdentifier I2:Int VS:ValueSequence =>
+      reverseValueSequence(VS)
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionReturnArity> I2 </cFunctionReturnArity>
+      ...
+    </cFunction>
+
+  rule
+    <k>
+      #FunctionCallCollectReturnValuesRecursive I1:AstIdentifier I2:Int VS:ValueSequence =>
+      #FunctionCallCollectReturnValuesRecursive I1 (I2 +Int 1) (VV VS)
+      ...
+    </k>
+    <cFunction>
+      <cFunctionName> I1 </cFunctionName>
+      <cFunctionReturnParameters>
+        <cFunctionReturnParameterIndex> I2 </cFunctionReturnParameterIndex>
+        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
+        ...
+      </cFunctionReturnParameters>
+      ...
+    </cFunction>
+    <cVariable>
+      <cVariableName> FRPN </cVariableName>
+      <cVariableValue> VV </cVariableValue>
+      ...
+    </cVariable>
+
+  rule
+    <k>
+      .ValueSequence ~> #FunctionCallReturn =>
+      (
+        #EnvironmentPop ~>
+        #EnvironmentRestore ~>
+        #SymbolTablePop
+      )
+      ...
+    </k>
+
+  rule
+    <k>
+      (V VS):ValueSequence ~> #FunctionCallReturn =>
+      (
+        #EnvironmentPop ~>
+        #EnvironmentRestore ~>
+        #SymbolTablePop ~>
+        V VS
+      )
+      ...
+    </k>
 
   /**
    * FunctionDefinition
@@ -641,99 +468,26 @@ module YUL
 
   rule
     <k>
-      function I:Identifier ( ) B:Block =>
-      #FunctionDefinition1 I B
+      #Execute AstFunctionDefinition(
+        I:AstIdentifier,
+        TIL1:AstTypedIdentifierList,
+        TIL2:AstTypedIdentifierList,
+        B:AstBlock
+      ) =>
+      (
+        #DefineFunction I B ~>
+        #DefineFunctionParameters I TIL1 ~>
+        #DefineFunctionReturnParameters I TIL2
+      )
       ...
     </k>
-    <cRules> ... .Set => SetItem("51") </cRules>
 
   rule
     <k>
-      function I:Identifier ( TIL:TypedIdentifierList ) B:Block =>
-      #FunctionDefinition2 I TIL B
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("52") </cRules>
-
-  rule
-    <k>
-      function I:Identifier ( ) -> TIL:TypedIdentifierList B:Block =>
-      #FunctionDefinition3 I TIL B
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("53") </cRules>
-
-  rule
-    <k>
-      function I:Identifier ( TIL1:TypedIdentifierList ) -> TIL2:TypedIdentifierList B:Block =>
-      #FunctionDefinition4 I TIL1 TIL2 B
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("54") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition1 I:Identifier B:Block =>
-      #DefineFunction I B
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("55") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition2 I:Identifier TI:TypedIdentifier B:Block =>
-      #DefineFunction I B ~> #DefineFunctionParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("56") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition2 I:Identifier (TIL , TI):TypedIdentifierList B:Block =>
-      #FunctionDefinition2 I TIL B ~> #DefineFunctionParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("57") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition3 I:Identifier TI:TypedIdentifier B:Block =>
-      #DefineFunction I B ~> #DefineFunctionReturnParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("58") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition3 I:Identifier (TIL , TI):TypedIdentifierList B:Block =>
-      #FunctionDefinition3 I TIL B ~> #DefineFunctionReturnParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("59") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition4 I:Identifier TIL1:TypedIdentifierList TI:TypedIdentifier B:Block =>
-      #FunctionDefinition2 I TIL1 B ~> #DefineFunctionReturnParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("60") </cRules>
-
-  rule
-    <k>
-      #FunctionDefinition4 I:Identifier TIL1:TypedIdentifierList (TIL2 , TI):TypedIdentifierList B:Block =>
-      #FunctionDefinition4 I TIL1 TIL2 B ~> #DefineFunctionReturnParameter I TI
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("61") </cRules>
-
-  rule
-    <k>
-      #DefineFunction I:Identifier B:Block =>
+      #DefineFunction I:AstIdentifier B:AstBlock =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("62") </cRules>
     <cSymbolTableStack>
       <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
       <cSymbolTable>
@@ -754,11 +508,20 @@ module YUL
 
   rule
     <k>
-      #DefineFunctionParameter I1:Identifier (I2 : TN):TypedIdentifier =>
+      #DefineFunctionParameters I:AstIdentifier .List =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("63") </cRules>
+
+  rule
+    <k>
+      #DefineFunctionParameters
+        I1:AstIdentifier
+        (ListItem(AstTypedIdentifier(I2, TN)) TIL):AstTypedIdentifierList
+      =>
+      #DefineFunctionParameters I1 TIL
+      ...
+    </k>
     <cSymbolTableStack>
       <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
       <cSymbolTable>
@@ -783,11 +546,20 @@ module YUL
 
   rule
     <k>
-      #DefineFunctionReturnParameter I1:Identifier (I2 : TN):TypedIdentifier =>
+      #DefineFunctionReturnParameters I:AstIdentifier .List =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("64") </cRules>
+
+  rule
+    <k>
+      #DefineFunctionReturnParameters
+        I1:AstIdentifier
+        (ListItem(AstTypedIdentifier(I2, TN)) TIL):AstTypedIdentifierList
+      =>
+      #DefineFunctionReturnParameters I1 TIL
+      ...
+    </k>
     <cSymbolTableStack>
       <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
       <cSymbolTable>
@@ -811,163 +583,258 @@ module YUL
     </cSymbolTableStack>
 
   /**
+   * Identifier
+   */
+
+  rule
+    <k>
+      #Execute AstIdentifier(I) =>
+      VV .ValueSequence
+      ...
+    </k>
+    <cVariable>
+      <cVariableName> AstIdentifier(I) </cVariableName>
+      <cVariableValue> VV </cVariableValue>
+      ...
+    </cVariable>
+
+  /**
    * If
    */
 
   rule
     <k>
-      if E:Expression B:Block =>
+      #Execute AstIf(E:AstExpression, B:AstBlock) =>
       #IfHeat E B
       ...
     </k>
-    <cRules> ... .Set => SetItem("65") </cRules>
 
   rule
     <k>
-      #IfHeat E:Expression B:Block =>
-      E ~> #IfCool B
+      #IfHeat E:AstExpression B:AstBlock =>
+      #Execute E ~> #IfCool B
       ...
     </k>
-    <cRules> ... .Set => SetItem("66") </cRules>
 
   rule
     <k>
-      .ValueSequence (#ValueBool true) ~> #IfCool B:Block =>
-      B
+      (#ValueBool true) .ValueSequence ~> #IfCool B:AstBlock =>
+      #Execute B
       ...
     </k>
-    <cRules> ... .Set => SetItem("67") </cRules>
 
   rule
     <k>
-      .ValueSequence (#ValueBool false) ~> #IfCool B:Block =>
+      (#ValueBool false) .ValueSequence ~> #IfCool B:AstBlock =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("68") </cRules>
-
-  /**
-   * Statement Sequence
-   */
-
-  rule
-    <k>
-      #StatementSequenceHoist SS:StatementSequence =>
-      (
-        #StatementSequenceHoistHeat SS .List .List ~>
-        #StatementSequenceHoistReverse .List ~>
-        #StatementSequenceHoistSpread
-      )
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("69") </cRules>
-
-  rule
-    <k>
-      #StatementSequenceHoistHeat S:Statement L1:List L2:List =>
-      #IsFunctionDefinition S ~> #StatementSequenceHoistCool1 S L1 L2
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("70") </cRules>
-
-  rule
-    <k>
-      #StatementSequenceHoistHeat (SS S):StatementSequence L1:List L2:List =>
-      #IsFunctionDefinition S ~> #StatementSequenceHoistCool2 SS S L1 L2
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("71") </cRules>
-
-  rule
-    <k>
-      false ~> #StatementSequenceHoistCool1 S:Statement L1:List L2:List =>
-      L1 (ListItem(S) L2)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("72") </cRules>
-
-  rule
-    <k>
-      true ~> #StatementSequenceHoistCool1 S:Statement L1:List L2:List =>
-      (ListItem(S) L1) L2
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("73") </cRules>
-
-  rule
-    <k>
-      false ~> #StatementSequenceHoistCool2 SS:StatementSequence S:Statement L1:List L2:List =>
-      #StatementSequenceHoistHeat SS L1 (ListItem(S) L2)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("74") </cRules>
-
-  rule
-    <k>
-      true ~> #StatementSequenceHoistCool2 SS:StatementSequence S:Statement L1:List L2:List =>
-      #StatementSequenceHoistHeat SS (ListItem(S) L1) L2
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("75") </cRules>
-
-  rule
-    <k>
-      .List ~> #StatementSequenceHoistReverse L:List =>
-      L
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("76") </cRules>
-
-  rule
-    <k>
-      ListItem(S) L1:List ~> #StatementSequenceHoistReverse L2:List =>
-      L1 ~> #StatementSequenceHoistReverse (ListItem(S) L2)
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("77") </cRules>
-
-  rule
-    <k>
-      .List ~> #StatementSequenceHoistSpread =>
-      .
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("78") </cRules>
-
-  rule
-    <k>
-      ListItem(S) L:List ~> #StatementSequenceHoistSpread =>
-      L ~> #StatementSequenceHoistSpread ~> S
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("79") </cRules>
 
   /**
    * Object
    */
-  rule
-    <k>
-      object LS:LiteralString { code B:Block } =>
-      B
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("80") </cRules>
 
   rule
     <k>
-      object LS:LiteralString { code B:Block OODS:ObjectOrDataSequence } =>
-      B ~> OODS
+      #Execute AstObject(
+        LS:AstLiteralString,
+        C:AstCode,
+        OODS:AstObjectOrDataSequence
+      ) =>
+      #Execute C ~> #ObjectOrDataSequenceSpread OODS
       ...
     </k>
-    <cRules> ... .Set => SetItem("81") </cRules>
 
   rule
     <k>
-      OODS:ObjectOrDataSequence OOD:ObjectOrData =>
-      OODS ~> OOD
+      #ObjectOrDataSequenceSpread .List =>
+      .
       ...
     </k>
-    <cRules> ... .Set => SetItem("82") </cRules>
+
+  rule
+    <k>
+      #ObjectOrDataSequenceSpread (ListItem(OOD) OODS):AstObjectOrDataSequence =>
+      #Execute OOD ~> #ObjectOrDataSequenceSpread OODS
+      ...
+    </k>
+
+  /**
+   * ObjectOrData
+   */
+
+  rule
+    <k>
+      #Execute AstObjectOrData(D:AstData) =>
+      .
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstObjectOrData(O:AstObject) =>
+      .
+      ...
+    </k>
+
+  /**
+   * StatementSequence
+   */
+
+  rule
+    <k>
+      #StatementSequenceHoist SS:AstStatementSequence =>
+      #StatementSequenceHoistRecursive SS .List .List
+      ...
+    </k>
+
+  rule
+    <k>
+      #StatementSequenceHoistRecursive .List L1:List L2:List =>
+      #StatementSequenceHoistSpread reverseList(reverseList(L1) reverseList(L2))
+      ...
+    </k>
+
+  rule
+    <k>
+      #StatementSequenceHoistRecursive (ListItem(S) SS):AstStatementSequence L1:List L2:List =>
+      #StatementSequenceHoistRecursiveHeat S SS L1 L2
+      ...
+    </k>
+
+  rule
+    <k>
+      #StatementSequenceHoistRecursiveHeat S:AstStatement SS:AstStatementSequence L1:List L2:List =>
+      #IsFunctionDefinition S ~> #StatementSequenceHoistRecursiveCool S SS L1 L2
+      ...
+    </k>
+
+  rule
+    <k>
+      true ~> #StatementSequenceHoistRecursiveCool S:AstStatement SS:AstStatementSequence L1:List L2:List =>
+      #StatementSequenceHoistRecursive SS (ListItem(S) L1) L2
+      ...
+    </k>
+
+  rule
+    <k>
+      false ~> #StatementSequenceHoistRecursiveCool S:AstStatement SS:AstStatementSequence L1:List L2:List =>
+      #StatementSequenceHoistRecursive SS L1 (ListItem(S) L2)
+      ...
+    </k>
+
+  rule
+    <k>
+      #StatementSequenceHoistSpread .List =>
+      .
+      ...
+    </k>
+
+  rule
+    <k>
+      #StatementSequenceHoistSpread (ListItem(S) SS):AstStatementSequence =>
+      #StatementSequenceHoistSpread SS ~> #Execute S
+      ...
+    </k>
+
+  /**
+   * Program
+   */
+
+  rule
+    <k>
+      #Execute AstProgram(B:AstBlock) =>
+      #Execute B
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstProgram(O:AstObject) =>
+      #Execute O
+      ...
+    </k>
+
+  /**
+   * Statement
+   */
+
+  rule
+    <k>
+      #Execute AstStatement(A:AstAssignment) =>
+      #Execute A
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(B:AstBlock) =>
+      #Execute B
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(B:AstBreak) =>
+      #Execute B
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(C:AstContinue) =>
+      #Execute C
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(D:AstDebug) =>
+      #Execute D
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(E:AstExpression) =>
+      #Execute E
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(F:AstFor) =>
+      #Execute F
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(FD:AstFunctionDefinition) =>
+      #Execute FD
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(I:AstIf) =>
+      #Execute I
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(S:AstSwitch) =>
+      #Execute S
+      ...
+    </k>
+
+  rule
+    <k>
+      #Execute AstStatement(VD:AstVariableDeclaration) =>
+      #Execute VD
+      ...
+    </k>
 
   /**
    * Switch
@@ -975,98 +842,224 @@ module YUL
 
   rule
     <k>
-      switch E:Expression CS:CaseSequence =>
-      E ~> #SwitchCaseSequence CS ~> #SwitchDoneMarker
+      #Execute AstSwitch(E:AstExpression, CS:AstCaseSequence, D:AstDefault) =>
+      #SwitchHeat E CS D
       ...
     </k>
-    <cRules> ... .Set => SetItem("83") </cRules>
 
   rule
     <k>
-      switch E:Expression CS:CaseSequence D:Default =>
-      E ~> #SwitchCaseSequence CS ~> #SwitchDefault D ~> #SwitchDoneMarker
+      #SwitchHeat E:AstExpression CS:AstCaseSequence D:AstDefault =>
+      #Execute E ~> #SwitchCool CS D
       ...
     </k>
-    <cRules> ... .Set => SetItem("84") </cRules>
 
   rule
     <k>
-      switch E:Expression D:Default =>
-      E ~> #SwitchDefault D ~> #SwitchDoneMarker
+      (V .ValueSequence) ~> #SwitchCool CS:AstCaseSequence D:AstDefault =>
+      #SwitchRecursive V CS D
       ...
     </k>
-    <cRules> ... .Set => SetItem("85") </cRules>
 
   rule
     <k>
-      .ValueSequence V:Value ~> #SwitchCaseSequence C:Case =>
-      .ValueSequence V:Value ~> #SwitchCase C
+      #SwitchRecursive V:Value .List .AstDefault =>
+      .
       ...
     </k>
-    <cRules> ... .Set => SetItem("86") </cRules>
 
   rule
     <k>
-      .ValueSequence V:Value ~> #SwitchCaseSequence (CS C):CaseSequence =>
-      .ValueSequence V:Value ~> #SwitchCaseSequence CS ~> #SwitchCase C
+      #SwitchRecursive V:Value .List (AstDefault(B:AstBlock)) =>
+      #Execute B
       ...
     </k>
-    <cRules> ... .Set => SetItem("87") </cRules>
 
   rule
     <k>
-      .ValueSequence V:Value ~> #SwitchCase (case L : TN B):Case =>
-      (L : TN) ~> .ValueSequence V:Value ~> #SwitchCaseCompare B
+      #SwitchRecursive V:Value (ListItem (AstCase(TL, B)) CS):AstCaseSequence D:AstDefault =>
+      #SwitchRecursiveHeat TL V B CS D
       ...
     </k>
-    <cRules> ... .Set => SetItem("88") </cRules>
 
   rule
     <k>
-      .ValueSequence V1:Value ~> .ValueSequence V2:Value ~> #SwitchCaseCompare B:Block =>
+      #SwitchRecursiveHeat
+        TL:AstTypedLiteral
+        V:Value
+        B:AstBlock
+        CS:AstCaseSequence
+        D:AstDefault
+      =>
+      #Execute TL ~> #SwitchRecursiveCool V B CS D
+      ...
+    </k>
+
+  rule
+    <k>
+      (V1 .ValueSequence) ~>
+        #SwitchRecursiveCool
+          V2:Value
+          B:AstBlock
+          CS:AstCaseSequence
+          D:AstDefault
+      =>
       (
         #if V1 ==K V2
         #then
-          B ~> #SwitchDone
+          #Execute B
         #else
-          .ValueSequence V2
+          #SwitchRecursive V2 CS D
         #fi
       )
       ...
     </k>
-    <cRules> ... .Set => SetItem("89") </cRules>
+
+  /**
+   * TypedLiteral
+   */
 
   rule
     <k>
-      .ValueSequence V:Value ~> #SwitchDefault (default B):Default =>
-      B ~> #SwitchDone
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralBool(B)),
+          AstTypeName(AstTypeNameBuiltIn(bool))
+        )
+      ) =>
+      (#ValueBool B) .ValueSequence
       ...
     </k>
-    <cRules> ... .Set => SetItem("90") </cRules>
 
   rule
     <k>
-      #SwitchDone ~> #SwitchCase C:Case =>
-      #SwitchDone
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(u8))
+        )
+      ) =>
+      (#ValueU8 I) .ValueSequence
       ...
     </k>
-    <cRules> ... .Set => SetItem("91") </cRules>
+    requires (0 <=Int I) andBool (I <Int (2 ^Int 8)) // >
 
   rule
     <k>
-      #SwitchDone ~> #SwitchDefault D:Default =>
-      #SwitchDone
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(u32))
+        )
+      ) =>
+      (#ValueU32 I) .ValueSequence
       ...
     </k>
-    <cRules> ... .Set => SetItem("92") </cRules>
+    requires (0 <=Int I) andBool (I <Int (2 ^Int 32)) // >
 
   rule
     <k>
-      #SwitchDone ~> #SwitchDoneMarker =>
-      .
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(u64))
+        )
+      ) =>
+      (#ValueU64 I) .ValueSequence
       ...
     </k>
-    <cRules> ... .Set => SetItem("93") </cRules>
+    requires (0 <=Int I) andBool (I <Int (2 ^Int 64)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(u128))
+        )
+      ) =>
+      (#ValueU128 I) .ValueSequence
+      ...
+    </k>
+    requires (0 <=Int I) andBool (I <Int (2 ^Int 128)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(u256))
+        )
+      ) =>
+      (#ValueU256 I) .ValueSequence
+      ...
+    </k>
+    requires (0 <=Int I) andBool (I <Int (2 ^Int 256)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(s8))
+        )
+      ) =>
+      (#ValueS8 I) .ValueSequence
+      ...
+    </k>
+    requires ((0 -Int (2 ^Int 7)) <=Int I) andBool (I <Int (2 ^Int 7)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(s32))
+        )
+      ) =>
+      (#ValueS32 I) .ValueSequence
+      ...
+    </k>
+    requires ((0 -Int (2 ^Int 31)) <=Int I) andBool (I <Int (2 ^Int 31)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(s64))
+        )
+      ) =>
+      (#ValueS64 I) .ValueSequence
+      ...
+    </k>
+    requires ((0 -Int (2 ^Int 63)) <=Int I) andBool (I <Int (2 ^Int 63)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(s128))
+        )
+      ) =>
+      (#ValueS128 I) .ValueSequence
+      ...
+    </k>
+    requires ((0 -Int (2 ^Int 127)) <=Int I) andBool (I <Int (2 ^Int 127)) // >
+
+  rule
+    <k>
+      #Execute (
+        AstTypedLiteral(
+          AstLiteral(AstLiteralNumber(AstLiteralNumberInt(I))),
+          AstTypeName(AstTypeNameBuiltIn(s256))
+        )
+      ) =>
+      (#ValueS256 I) .ValueSequence
+      ...
+    </k>
+    requires ((0 -Int (2 ^Int 255)) <=Int I) andBool (I <Int (2 ^Int 255)) // >
 
   /**
    * VariableDeclaration
@@ -1074,51 +1067,36 @@ module YUL
 
   rule
     <k>
-      let TIL:TypedIdentifierList =>
-      #VariableDeclaration TIL
+      #Execute AstVariableDeclaration(TIL:AstTypedIdentifierList) =>
+      #VariableDeclarationDefault TIL
       ...
     </k>
-    <cRules> ... .Set => SetItem("94") </cRules>
 
   rule
     <k>
-      let TIL:TypedIdentifierList := E:Expression =>
-      E ~> #VariableDeclarationCool TIL
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("95") </cRules>
-
-  rule
-    <k>
-      #VariableDeclaration (I : TN):TypedIdentifier =>
-      #DefaultValue TN ~> #VariableDeclarationOne I TN
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("96") </cRules>
-
-  rule
-    <k>
-      #VariableDeclaration (TIL , I : TN):TypedIdentifierList =>
-      #VariableDeclaration TIL ~> #DefaultValue TN ~> #VariableDeclarationOne I TN
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("97") </cRules>
-
-  rule
-    <k>
-      VS:ValueSequence ~> #VariableDeclarationCool TIL:TypedIdentifierList =>
-      #VariableDeclarationMany TIL VS
-      ...
-    </k>
-    <cRules> ... .Set => SetItem("98") </cRules>
-
-  rule
-    <k>
-      VV:Value ~> #VariableDeclarationOne I1:Identifier TN:TypeName =>
+      #VariableDeclarationDefault .List =>
       .
       ...
     </k>
-    <cRules> ... .Set => SetItem("99") </cRules>
+
+  rule
+    <k>
+      #VariableDeclarationDefault
+        (ListItem(AstTypedIdentifier(I, TN)) TIL):AstTypedIdentifierList
+      =>
+      (
+        #DefaultValue TN ~> #VariableDeclarationOne I TN ~>
+        #VariableDeclarationDefault TIL
+      )
+      ...
+    </k>
+
+  rule
+    <k>
+      V:Value ~> #VariableDeclarationOne I:AstIdentifier TN:AstTypeName =>
+      .
+      ...
+    </k>
     <cEnvironmentStack>
       <cEnvironmentStackSize> ESS </cEnvironmentStackSize>
       <cEnvironment>
@@ -1126,9 +1104,9 @@ module YUL
         (
           .Bag =>
           <cVariable>
-            <cVariableName> I1 </cVariableName>
+            <cVariableName> I </cVariableName>
             <cVariableType> TN </cVariableType>
-            <cVariableValue> VV </cVariableValue>
+            <cVariableValue> V </cVariableValue>
           </cVariable>
         )
         ...
@@ -1138,18 +1116,43 @@ module YUL
 
   rule
     <k>
-      #VariableDeclarationMany (I : TN):TypedIdentifier (.ValueSequence V):ValueSequence =>
-      V ~> #VariableDeclarationOne I TN
+      #Execute AstVariableDeclaration(TIL:AstTypedIdentifierList, E:AstExpression) =>
+      #VariableDeclarationHeat E TIL
       ...
     </k>
-    <cRules> ... .Set => SetItem("100") </cRules>
 
   rule
     <k>
-      #VariableDeclarationMany (TIL , I : TN):TypedIdentifierList (VS V):ValueSequence =>
-      #VariableDeclarationMany TIL VS ~> V ~> #VariableDeclarationOne I TN
+      #VariableDeclarationHeat E:AstExpression TIL:AstTypedIdentifierList =>
+      #Execute E ~> #VariableDeclarationCool TIL
       ...
     </k>
-    <cRules> ... .Set => SetItem("101") </cRules>
+
+  rule
+    <k>
+      VS:ValueSequence ~> #VariableDeclarationCool TIL =>
+      #VariableDeclarationMany TIL VS
+      ...
+    </k>
+
+  rule
+    <k>
+      #VariableDeclarationMany .List .ValueSequence =>
+      .
+      ...
+    </k>
+
+  rule
+    <k>
+      #VariableDeclarationMany
+        (ListItem(AstTypedIdentifier(I, TN)) TIL):AstTypedIdentifierList
+        (V VS):ValueSequence
+      =>
+      (
+        V ~> #VariableDeclarationOne I TN ~>
+        #VariableDeclarationMany TIL VS
+      )
+      ...
+    </k>
 
 endmodule
