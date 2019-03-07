@@ -1,26 +1,28 @@
 require "../../yul-configuration/yul-configuration.k"
-require "../../yul-execution/yul-execution.k"
+require "../../yul-semantics/yul-semantics.k"
 require "../../yul-syntax/yul-syntax.k"
+require "../../yul-utility/yul-utility.k"
 require "../../yul-value/yul-value.k"
 
 module YUL-BUILT-IN-LOGIC
   imports DOMAINS
   imports YUL-CONFIGURATION
-  imports YUL-EXECUTION
+  imports YUL-SEMANTICS
   imports YUL-SYNTAX
+  imports YUL-UTILITY
   imports YUL-VALUE
 
   syntax KItem ::=
-    "#BuiltInAnd" AstExpressionList |
-    "#BuiltInAndCool1" AstExpression |
+    "#BuiltInAnd" List |
+    "#BuiltInAndCool1" Expression |
     "#BuiltInAndCool2" |
-    "#BuiltInNot" AstExpressionList |
+    "#BuiltInNot" List |
     "#BuiltInNotCool" |
-    "#BuiltInOr" AstExpressionList |
-    "#BuiltInOrCool1" AstExpression |
+    "#BuiltInOr" List |
+    "#BuiltInOrCool1" Expression |
     "#BuiltInOrCool2" |
-    "#BuiltInXor" AstExpressionList |
-    "#BuiltInXorCool1" AstExpression |
+    "#BuiltInXor" List |
+    "#BuiltInXorCool1" Expression |
     "#BuiltInXorCool2"
 
   /**
@@ -29,37 +31,36 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #BuiltInAnd EL
+      `FunctionCall2`(#token("and", "Id"), EL:ExpressionList) =>
+      #BuiltInAnd toBuiltInList(EL)
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("and"))
 
   rule
     <k>
       #BuiltInAnd (ListItem(E1) ListItem(E2) .List) =>
-      #Execute E1 ~> #BuiltInAndCool1 E2
+      E1 ~> #BuiltInAndCool1 E2
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool true) .ValueSequence ~> #BuiltInAndCool1 E =>
-      #Execute E ~> #BuiltInAndCool2
+      ListItem(#ValueBool true) ~> #BuiltInAndCool1 E =>
+      E ~> #BuiltInAndCool2
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool B) .ValueSequence ~> #BuiltInAndCool2 =>
-      (#ValueBool B) .ValueSequence
+      ListItem(#ValueBool B) ~> #BuiltInAndCool2 =>
+      ListItem(#ValueBool B)
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool false) .ValueSequence ~> #BuiltInAndCool1 E =>
-      (#ValueBool false) .ValueSequence
+      ListItem(#ValueBool false) ~> #BuiltInAndCool1 E =>
+      ListItem(#ValueBool false)
       ...
     </k>
 
@@ -69,23 +70,22 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #BuiltInNot EL
+      `FunctionCall2`(#token("not", "Id"), EL:ExpressionList) =>
+      #BuiltInNot toBuiltInList(EL)
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("not"))
 
   rule
     <k>
       #BuiltInNot (ListItem(E) .List) =>
-      #Execute E ~> #BuiltInNotCool
+      E ~> #BuiltInNotCool
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool B) .ValueSequence ~> #BuiltInNotCool =>
-      (#ValueBool (notBool B)) .ValueSequence
+      ListItem(#ValueBool B) ~> #BuiltInNotCool =>
+      ListItem(#ValueBool (notBool B))
       ...
     </k>
 
@@ -95,37 +95,36 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #BuiltInOr EL
+      `FunctionCall2`(#token("or", "Id"), EL:ExpressionList) =>
+      #BuiltInOr toBuiltInList(EL)
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("or"))
 
   rule
     <k>
       #BuiltInOr (ListItem(E1) ListItem(E2) .List) =>
-      #Execute E1 ~> #BuiltInOrCool1 E2
+      E1 ~> #BuiltInOrCool1 E2
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool true) .ValueSequence ~> #BuiltInOrCool1 E =>
-      (#ValueBool true) .ValueSequence
+      ListItem(#ValueBool true) ~> #BuiltInOrCool1 E =>
+      ListItem(#ValueBool true)
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool false) .ValueSequence ~> #BuiltInOrCool1 E =>
-      #Execute E ~> #BuiltInOrCool2
+      ListItem(#ValueBool false) ~> #BuiltInOrCool1 E =>
+      E ~> #BuiltInOrCool2
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool B) .ValueSequence ~> #BuiltInOrCool2 =>
-      (#ValueBool B) .ValueSequence
+      ListItem(#ValueBool B) ~> #BuiltInOrCool2 =>
+      ListItem(#ValueBool B)
       ...
     </k>
 
@@ -135,30 +134,29 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #BuiltInXor EL
+      `FunctionCall2`(#token("xor", "Id"), EL:ExpressionList) =>
+      #BuiltInXor toBuiltInList(EL)
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("xor"))
 
   rule
     <k>
       #BuiltInXor (ListItem(E1) ListItem(E2) .List) =>
-      #Execute E1 ~> #BuiltInXorCool1 E2
+      E1 ~> #BuiltInXorCool1 E2
       ...
     </k>
 
   rule
     <k>
-      VS:ValueSequence ~> #BuiltInXorCool1 E =>
-      #Execute E ~> VS ~> #BuiltInXorCool2
+      VL:List ~> #BuiltInXorCool1 E =>
+      E ~> VL ~> #BuiltInXorCool2
       ...
     </k>
 
   rule
     <k>
-      (#ValueBool B1) .ValueSequence ~> (#ValueBool B2) .ValueSequence ~> #BuiltInXorCool2 =>
-      (#ValueBool (B1 xorBool B2)) .ValueSequence
+      ListItem(#ValueBool B1) ~> ListItem(#ValueBool B2) ~> #BuiltInXorCool2 =>
+      ListItem(#ValueBool (B1 xorBool B2))
       ...
     </k>
 

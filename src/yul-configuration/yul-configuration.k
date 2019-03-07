@@ -1,19 +1,12 @@
-require "../yul-ast/yul-ast.k"
 require "../yul-syntax/yul-syntax.k"
 
 module YUL-CONFIGURATION
   imports DOMAINS
-  imports YUL-AST
   imports YUL-SYNTAX
-
-  syntax Mode ::=
-    "AST" [klabel(AST), symbol] |
-    "EXECUTION" [klabel(EXECUTION), symbol]
 
   configuration
     <T>
       <k> $PGM:Program </k>
-      <cMode> $MODE:Mode </cMode>
       <cSymbolTableStack>
         <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
         <cSymbolTable multiplicity="*">
@@ -49,125 +42,5 @@ module YUL-CONFIGURATION
       </cEnvironmentStack>
       <cEnvironmentStackCopies> .List </cEnvironmentStackCopies>
     </T>
-
-  syntax KItem ::=
-    "#EnvironmentPop" |
-    "#EnvironmentPush" |
-    "#EnvironmentReplace" |
-    "#EnvironmentRestore" |
-    "#SymbolTablePop" |
-    "#SymbolTablePush"
-
-  rule
-    <k>
-      #EnvironmentPop =>
-      .
-      ...
-    </k>
-    <cEnvironmentStack>
-      <cEnvironmentStackSize> ESS => ESS -Int 1 </cEnvironmentStackSize>
-      (
-        (
-          <cEnvironment>
-            <cEnvironmentIndex> ESS -Int 1 </cEnvironmentIndex>
-            ...
-          </cEnvironment>
-        ) =>
-        .Bag
-      )
-      ...
-    </cEnvironmentStack>
-
-  rule
-    <k>
-      #EnvironmentPush =>
-      .
-      ...
-    </k>
-    <cEnvironmentStack>
-      <cEnvironmentStackSize> ESS => ESS +Int 1 </cEnvironmentStackSize>
-      (
-        .Bag =>
-        (
-          <cEnvironment>
-            <cEnvironmentIndex> ESS </cEnvironmentIndex>
-            ...
-          </cEnvironment>
-        )
-      )
-      ...
-    </cEnvironmentStack>
-
-  rule
-    <k>
-      #EnvironmentReplace =>
-      .
-      ...
-    </k>
-    <cEnvironmentStack>
-      ES =>
-      <cEnvironmentStackSize> 0 </cEnvironmentStackSize>
-    </cEnvironmentStack>
-    <cEnvironmentStackCopies>
-      .List =>
-      ListItem(<cEnvironmentStack> ES </cEnvironmentStack>)
-      ...
-    </cEnvironmentStackCopies>
-
-  rule
-    <k>
-      #EnvironmentRestore =>
-      .
-      ...
-    </k>
-    <cEnvironmentStack>
-      _ =>
-      ES
-    </cEnvironmentStack>
-    <cEnvironmentStackCopies>
-      ListItem(<cEnvironmentStack> ES </cEnvironmentStack>) =>
-      .List
-      ...
-    </cEnvironmentStackCopies>
-
-  rule
-    <k>
-      #SymbolTablePop =>
-      .
-      ...
-    </k>
-    <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS => STSS -Int 1 </cSymbolTableStackSize>
-      (
-        (
-          <cSymbolTable>
-            <cSymbolTableIndex> STSS -Int 1 </cSymbolTableIndex>
-            ...
-          </cSymbolTable>
-        ) =>
-        .Bag
-      )
-      ...
-    </cSymbolTableStack>
-
-  rule
-    <k>
-      #SymbolTablePush =>
-      .
-      ...
-    </k>
-    <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS => STSS +Int 1 </cSymbolTableStackSize>
-      (
-        .Bag =>
-        (
-          <cSymbolTable>
-            <cSymbolTableIndex> STSS </cSymbolTableIndex>
-            ...
-          </cSymbolTable>
-        )
-      )
-      ...
-    </cSymbolTableStack>
 
 endmodule

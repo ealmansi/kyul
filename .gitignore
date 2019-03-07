@@ -67,3 +67,4 @@ typings/
 # K outputs
 *-kompiled*
 .krun*
+.kprove*

@@ -1,29 +1,12 @@
-require "../yul-ast/yul-ast.k"
 require "../yul-built-in/yul-built-in.k"
 require "../yul-configuration/yul-configuration.k"
-require "../yul-execution/yul-execution.k"
+require "../yul-semantics/yul-semantics.k"
 require "../yul-syntax/yul-syntax.k"
 
 module YUL
   imports DOMAINS
-  imports YUL-AST
   imports YUL-BUILT-IN
   imports YUL-CONFIGURATION
-  imports YUL-EXECUTION
+  imports YUL-SEMANTICS
   imports YUL-SYNTAX
-
-  rule
-    <k>
-      P:Program =>
-      toAstProgram(P)
-    </k>
-    <cMode> AST </cMode>
-
-  rule
-    <k>
-      P:Program =>
-      #Execute toAstProgram(P)
-    </k>
-    <cMode> EXECUTION </cMode>
-
 endmodule

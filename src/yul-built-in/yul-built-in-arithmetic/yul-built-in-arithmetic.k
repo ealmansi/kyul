@@ -1,13 +1,15 @@
 require "../../yul-configuration/yul-configuration.k"
-require "../../yul-execution/yul-execution.k"
+require "../../yul-semantics/yul-semantics.k"
 require "../../yul-syntax/yul-syntax.k"
+require "../../yul-utility/yul-utility.k"
 require "../../yul-value/yul-value.k"
 
 module YUL-BUILT-IN-ARITHMETIC
   imports DOMAINS
   imports YUL-CONFIGURATION
-  imports YUL-EXECUTION
+  imports YUL-SEMANTICS
   imports YUL-SYNTAX
+  imports YUL-UTILITY
   imports YUL-VALUE
 
   syntax KItem ::=
@@ -45,16 +47,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInAddModU256
+        `FunctionCall2`(#token("addmodu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInAddModU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("addmodu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) .ValueSequence ~> #BuiltInAddModU256 =>
-      (#ValueU256 ((I1 +Int I2) modInt I3)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ListItem(#ValueU256 I3) ~> #BuiltInAddModU256 =>
+      ListItem(#ValueU256 ((I1 +Int I2) modInt I3))
       ...
     </k>
 
@@ -66,16 +67,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInAddU256
+        `FunctionCall2`(#token("addu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInAddU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("addu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInAddU256 =>
-      (#ValueU256 ((I1 +Int I2) modInt (2 ^Int 256))) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInAddU256 =>
+      ListItem(#ValueU256 ((I1 +Int I2) modInt (2 ^Int 256)))
       ...
     </k>
 
@@ -87,11 +87,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInAndU256
+        `FunctionCall2`(#token("andu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInAndU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("andu256"))
 
   /**
   * byte(n:u256, x:u256) -> v:u256
@@ -101,16 +100,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInByte
+        `FunctionCall2`(#token("byte", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInByte
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("byte"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInByte =>
-      (#ValueU256 ((I2 /Int (256 ^Int (31 -Int I1))) modInt 256)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInByte =>
+      ListItem(#ValueU256 ((I2 /Int (256 ^Int (31 -Int I1))) modInt 256))
       ...
     </k>
     requires 0 <=Int I1 andBool I1 <=Int 31
@@ -123,16 +121,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInDivS256
+        `FunctionCall2`(#token("divs256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInDivS256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("divs256"))
 
   rule
     <k>
-      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInDivS256 =>
-      (#ValueS256 (I1 /Int I2)) .ValueSequence
+      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInDivS256 =>
+      ListItem(#ValueS256 (I1 /Int I2))
       ...
     </k>
 
@@ -144,16 +141,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInDivU256
+        `FunctionCall2`(#token("divu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInDivU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("divu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInDivU256 =>
-      (#ValueU256 (I1 /Int I2)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInDivU256 =>
+      ListItem(#ValueU256 (I1 /Int I2))
       ...
     </k>
 
@@ -165,16 +161,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInEqU256
+        `FunctionCall2`(#token("equ256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInEqU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("equ256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInEqU256 =>
-      (#ValueBool (I1 ==Int I2)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInEqU256 =>
+      ListItem(#ValueBool (I1 ==Int I2))
       ...
     </k>
 
@@ -186,16 +181,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInExpU256
+        `FunctionCall2`(#token("expu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInExpU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("expu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInExpU256 =>
-      (#ValueU256 ((I1 ^Int I2) modInt (2 ^Int 256))) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInExpU256 =>
+      ListItem(#ValueU256 ((I1 ^Int I2) modInt (2 ^Int 256)))
       ...
     </k>
 
@@ -207,16 +201,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInGtS256
+        `FunctionCall2`(#token("gts256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInGtS256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("gts256"))
 
   rule
     <k>
-      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInGtS256 =>
-      (#ValueBool (I1 >Int I2)) .ValueSequence
+      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInGtS256 =>
+      ListItem(#ValueBool (I1 >Int I2))
       ...
     </k>
 
@@ -228,16 +221,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInGtU256
+        `FunctionCall2`(#token("gtu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInGtU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("gtu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInGtU256 =>
-      (#ValueBool (I1 >Int I2)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInGtU256 =>
+      ListItem(#ValueBool (I1 >Int I2))
       ...
     </k>
 
@@ -249,16 +241,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInIsZeroU256
+        `FunctionCall2`(#token("iszerou256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInIsZeroU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("iszerou256"))
 
   rule
     <k>
-      (#ValueU256 I) .ValueSequence ~> #BuiltInIsZeroU256 =>
-      (#ValueBool (I ==Int 0)) .ValueSequence
+      ListItem(#ValueU256 I) ~> #BuiltInIsZeroU256 =>
+      ListItem(#ValueBool (I ==Int 0))
       ...
     </k>
 
@@ -270,16 +261,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #ExecuteFunctionArguments EL ~> #BuiltInLtS256
+      `FunctionCall2`(#token("lts256", "Id"), EL:ExpressionList) =>
+      #FunctionArguments toBuiltInList(EL) ~> #BuiltInLtS256
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("lts256"))
 
   rule
     <k>
-      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInLtS256 =>
-      (#ValueBool (I1 <Int I2)) .ValueSequence
+      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInLtS256 =>
+      ListItem(#ValueBool (I1 <Int I2))
       ...
     </k>
 
@@ -291,16 +281,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      #Execute AstFunctionCall(I, EL) =>
-      #ExecuteFunctionArguments EL ~> #BuiltInLtU256
+      `FunctionCall2`(#token("ltu256", "Id"), EL:ExpressionList) =>
+      #FunctionArguments toBuiltInList(EL) ~> #BuiltInLtU256
       ...
     </k>
-    requires I ==K AstIdentifier(String2Id("ltu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInLtU256 =>
-      (#ValueBool (I1 <Int I2)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInLtU256 =>
+      ListItem(#ValueBool (I1 <Int I2))
       ...
     </k>
 
@@ -312,16 +301,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInModS256
+        `FunctionCall2`(#token("mods256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInModS256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("mods256"))
 
   rule
     <k>
-      (#ValueS256 I1) (#ValueS256 I2) .ValueSequence ~> #BuiltInModS256 =>
-      (#ValueS256 (I1 %Int I2)) .ValueSequence
+      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInModS256 =>
+      ListItem(#ValueS256 (I1 %Int I2))
       ...
     </k>
 
@@ -333,16 +321,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInModU256
+        `FunctionCall2`(#token("modu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInModU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("modu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInModU256 =>
-      (#ValueU256 (I1 modInt I2)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInModU256 =>
+      ListItem(#ValueU256 (I1 modInt I2))
       ...
     </k>
 
@@ -354,16 +341,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInMulModU256
+        `FunctionCall2`(#token("mulmodu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInMulModU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("mulmodu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) (#ValueU256 I3) .ValueSequence ~> #BuiltInMulModU256 =>
-      (#ValueU256 ((I1 *Int I2) modInt I3)) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ListItem(#ValueU256 I3) ~> #BuiltInMulModU256 =>
+      ListItem(#ValueU256 ((I1 *Int I2) modInt I3))
       ...
     </k>
 
@@ -375,16 +361,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInMulU256
+        `FunctionCall2`(#token("mulu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInMulU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("mulu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInMulU256 =>
-      (#ValueU256 ((I1 *Int I2) modInt (2 ^Int 256))) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInMulU256 =>
+      ListItem(#ValueU256 ((I1 *Int I2) modInt (2 ^Int 256)))
       ...
     </k>
 
@@ -396,16 +381,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInNotU256
+        `FunctionCall2`(#token("notu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInNotU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("notu256"))
 
   rule
     <k>
-      (#ValueU256 I) .ValueSequence ~> #BuiltInNotU256 =>
-      (#ValueU256 (((2 ^Int 256) -Int 1) -Int I)) .ValueSequence
+      ListItem(#ValueU256 I) ~> #BuiltInNotU256 =>
+      ListItem(#ValueU256 (((2 ^Int 256) -Int 1) -Int I))
       ...
     </k>
 
@@ -417,11 +401,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInOrU256
+        `FunctionCall2`(#token("oru256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInOrU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("oru256"))
 
   /**
   * sars256(x:s256, y:u256) -> z:u256
@@ -431,11 +414,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInSarS256
+        `FunctionCall2`(#token("sars256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInSarS256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("sars256"))
 
   /**
   * shlu256(x:u256, y:u256) -> z:u256
@@ -445,11 +427,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInShlU256
+        `FunctionCall2`(#token("shlu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInShlU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("shlu256"))
 
   /**
   * shru256(x:u256, y:u256) -> z:u256
@@ -459,11 +440,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInShrU256
+        `FunctionCall2`(#token("shru256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInShrU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("shru256"))
 
   /**
   * signextendu256(i:u256, x:u256) -> z:u256
@@ -473,11 +453,10 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInSignExtendU256
+        `FunctionCall2`(#token("signextendu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInSignExtendU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("signextendu256"))
 
   /**
   * subu256(x:u256, y:u256) -> z:u256
@@ -487,16 +466,15 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInSubU256
+        `FunctionCall2`(#token("subu256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInSubU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("subu256"))
 
   rule
     <k>
-      (#ValueU256 I1) (#ValueU256 I2) .ValueSequence ~> #BuiltInSubU256 =>
-      (#ValueU256 ((I1 -Int I2) modInt (2 ^Int 256))) .ValueSequence
+      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInSubU256 =>
+      ListItem(#ValueU256 ((I1 -Int I2) modInt (2 ^Int 256)))
       ...
     </k>
 
@@ -508,10 +486,9 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
       <k>
-        #Execute AstFunctionCall(I, EL) =>
-        #ExecuteFunctionArguments EL ~> #BuiltInXorU256
+        `FunctionCall2`(#token("xoru256", "Id"), EL:ExpressionList) =>
+        #FunctionArguments toBuiltInList(EL) ~> #BuiltInXorU256
         ...
       </k>
-      requires I ==K AstIdentifier(String2Id("xoru256"))
 
 endmodule

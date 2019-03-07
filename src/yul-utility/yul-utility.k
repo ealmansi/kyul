@@ -1,111 +1,269 @@
-require "../yul-ast/yul-ast.k"
 require "../yul-configuration/yul-configuration.k"
 require "../yul-syntax/yul-syntax.k"
 require "../yul-value/yul-value.k"
 
 module YUL-UTILITY
   imports DOMAINS
-  imports YUL-AST
   imports YUL-CONFIGURATION
   imports YUL-SYNTAX
   imports YUL-VALUE
 
   /**
-   * appendValueToSequence
+   * Configuration
    */
 
-  syntax ValueSequence ::=
-    appendValueToSequence(ValueSequence, Value) [function]
+  syntax KItem ::=
+    "#EnvironmentPop" |
+    "#EnvironmentPush" |
+    "#EnvironmentReplace" |
+    "#EnvironmentRestore" |
+    "#SymbolTablePop" |
+    "#SymbolTablePush"
 
-  rule appendValueToSequence(.ValueSequence, V) =>
-    V .ValueSequence
+  rule
+    <k>
+      #EnvironmentPop =>
+      .
+      ...
+    </k>
+    <cEnvironmentStack>
+      <cEnvironmentStackSize> ESS => ESS -Int 1 </cEnvironmentStackSize>
+      (
+        (
+          <cEnvironment>
+            <cEnvironmentIndex> ESS -Int 1 </cEnvironmentIndex>
+            ...
+          </cEnvironment>
+        ) =>
+        .Bag
+      )
+      ...
+    </cEnvironmentStack>
 
-  rule appendValueToSequence(V1 VS, V2) =>
-    V1 appendValueToSequence(VS, V2)
+  rule
+    <k>
+      #EnvironmentPush =>
+      .
+      ...
+    </k>
+    <cEnvironmentStack>
+      <cEnvironmentStackSize> ESS => ESS +Int 1 </cEnvironmentStackSize>
+      (
+        .Bag =>
+        (
+          <cEnvironment>
+            <cEnvironmentIndex> ESS </cEnvironmentIndex>
+            ...
+          </cEnvironment>
+        )
+      )
+      ...
+    </cEnvironmentStack>
+
+  rule
+    <k>
+      #EnvironmentReplace =>
+      .
+      ...
+    </k>
+    <cEnvironmentStack>
+      ES =>
+      <cEnvironmentStackSize> 0 </cEnvironmentStackSize>
+    </cEnvironmentStack>
+    <cEnvironmentStackCopies>
+      .List =>
+      ListItem(<cEnvironmentStack> ES </cEnvironmentStack>)
+      ...
+    </cEnvironmentStackCopies>
+
+  rule
+    <k>
+      #EnvironmentRestore =>
+      .
+      ...
+    </k>
+    <cEnvironmentStack>
+      _ =>
+      ES
+    </cEnvironmentStack>
+    <cEnvironmentStackCopies>
+      ListItem(<cEnvironmentStack> ES </cEnvironmentStack>) =>
+      .List
+      ...
+    </cEnvironmentStackCopies>
+
+  rule
+    <k>
+      #SymbolTablePop =>
+      .
+      ...
+    </k>
+    <cSymbolTableStack>
+      <cSymbolTableStackSize> STSS => STSS -Int 1 </cSymbolTableStackSize>
+      (
+        (
+          <cSymbolTable>
+            <cSymbolTableIndex> STSS -Int 1 </cSymbolTableIndex>
+            ...
+          </cSymbolTable>
+        ) =>
+        .Bag
+      )
+      ...
+    </cSymbolTableStack>
+
+  rule
+    <k>
+      #SymbolTablePush =>
+      .
+      ...
+    </k>
+    <cSymbolTableStack>
+      <cSymbolTableStackSize> STSS => STSS +Int 1 </cSymbolTableStackSize>
+      (
+        .Bag =>
+        (
+          <cSymbolTable>
+            <cSymbolTableIndex> STSS </cSymbolTableIndex>
+            ...
+          </cSymbolTable>
+        )
+      )
+      ...
+    </cSymbolTableStack>
 
   /**
    * IsFunctionDefinition
    */
 
   syntax KItem ::=
-    "#IsFunctionDefinition" AstStatement
+    "#IsFunctionDefinition" Statement
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(A:AstAssignment) =>
+      #IsFunctionDefinition A:Assignment =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(B:AstBlock) =>
+      #IsFunctionDefinition B:Block =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(B:AstBreak) =>
+      #IsFunctionDefinition B:Break =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(C:AstContinue) =>
+      #IsFunctionDefinition C:Continue =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(D:AstDebug) =>
+      #IsFunctionDefinition D:Debug =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(E:AstExpression) =>
+      #IsFunctionDefinition E:Expression =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(F:AstFor) =>
+      #IsFunctionDefinition F:For =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(FD:AstFunctionDefinition) =>
+      #IsFunctionDefinition FD:FunctionDefinition =>
       true
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(I:AstIf) =>
+      #IsFunctionDefinition I:If =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(S:AstSwitch) =>
+      #IsFunctionDefinition S:Switch =>
       false
       ...
     </k>
 
   rule
     <k>
-      #IsFunctionDefinition AstStatement(VD:AstVariableDeclaration) =>
+      #IsFunctionDefinition VD:VariableDeclaration =>
       false
       ...
     </k>
+
+  /**
+   * toBuiltInList
+   */
+
+  syntax List ::=
+    toBuiltInList(CaseSequence) [function]
+
+  rule toBuiltInList(C:Case) =>
+    ListItem(C)
+
+  rule toBuiltInList(`CaseSequence`(CS:CaseSequence, C:Case)) =>
+    toBuiltInList(CS) ListItem(C)
+
+  syntax List ::=
+    toBuiltInList(ExpressionList) [function]
+
+  rule toBuiltInList(E:Expression) =>
+    ListItem(E)
+
+  rule toBuiltInList(`ExpressionList`(EL:ExpressionList, E:Expression)) =>
+    toBuiltInList(EL) ListItem(E)
+
+  syntax List ::=
+    toBuiltInList(IdentifierList) [function]
+
+  rule toBuiltInList(I:Identifier) =>
+    ListItem(I)
+
+  rule toBuiltInList(`IdentifierList`(IL:IdentifierList, I:Identifier)) =>
+    toBuiltInList(IL) ListItem(I)
+
+  syntax List ::=
+    toBuiltInList(StatementSequence) [function]
+
+  rule toBuiltInList(S:Statement) =>
+    ListItem(S)
+
+  rule toBuiltInList(`StatementSequence`(SS:StatementSequence, S:Statement)) =>
+    toBuiltInList(SS) ListItem(S)
+
+  syntax List ::=
+    toBuiltInList(TypedIdentifierList) [function]
+
+  rule toBuiltInList(TI:TypedIdentifier) =>
+    ListItem(TI)
+
+  rule toBuiltInList(`TypedIdentifierList`(TIL:TypedIdentifierList, TI:TypedIdentifier)) =>
+    toBuiltInList(TIL) ListItem(TI)
 
   /**
    * reverseList
@@ -119,18 +277,5 @@ module YUL-UTILITY
 
   rule reverseList(ListItem(H) L) =>
     reverseList(L) ListItem(H)
-
-  /**
-   * reverseValueSequence
-   */
-
-  syntax ValueSequence ::=
-    reverseValueSequence(ValueSequence) [function]
-
-  rule reverseValueSequence(.ValueSequence) =>
-    .ValueSequence
-
-  rule reverseValueSequence(V VS) =>
-    appendValueToSequence(reverseValueSequence(VS), V)
 
 endmodule

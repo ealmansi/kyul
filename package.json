@@ -6,9 +6,7 @@
   "author": "Emilio Almansi",
   "license": "MIT",
   "scripts": {
-    "ast": "yarn krun -cMODE=AST",
     "build": "yarn kompile",
-    "execute": "yarn krun -cMODE=EXECUTION",
     "kompile": "kompile --backend java --syntax-module YUL-SYNTAX src/yul/yul.k",
     "kprove": "kprove --directory src/yul/ --def-module YUL",
     "krun": "krun --directory src/yul/",

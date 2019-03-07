@@ -19,88 +19,83 @@ module YUL-VALUE
     "#ValueS128" Int |
     "#ValueS256" Int
 
-  syntax ValueSequence ::=
-    ".ValueSequence" |
-    Value ValueSequence
-
   syntax KItem ::=
-    "#DefaultValue" AstTypeName |
-    ValueSequence
+    "#DefaultValue" TypeName
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( bool ) )) =>
-      #ValueBool false
+      #DefaultValue bool =>
+      ListItem(#ValueBool false)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u8 ) )) =>
-      #ValueU8 0
+      #DefaultValue u8 =>
+      ListItem(#ValueU8 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u32 ) )) =>
-      #ValueU32 0
+      #DefaultValue u32 =>
+      ListItem(#ValueU32 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u64 ) )) =>
-      #ValueU64 0
+      #DefaultValue u64 =>
+      ListItem(#ValueU64 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u128 ) )) =>
-      #ValueU128 0
+      #DefaultValue u128 =>
+      ListItem(#ValueU128 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( u256 ) )) =>
-      #ValueU256 0
+      #DefaultValue u256 =>
+      ListItem(#ValueU256 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s8 ) )) =>
-      #ValueS8 0
+      #DefaultValue s8 =>
+      ListItem(#ValueS8 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s32 ) )) =>
-      #ValueS32 0
+      #DefaultValue s32 =>
+      ListItem(#ValueS32 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s64 ) )) =>
-      #ValueS64 0
+      #DefaultValue s64 =>
+      ListItem(#ValueS64 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s128 ) )) =>
-      #ValueS128 0
+      #DefaultValue s128 =>
+      ListItem(#ValueS128 0)
       ...
     </k>
 
   rule
     <k>
-      #DefaultValue (AstTypeName ( AstTypeNameBuiltIn ( s256 ) )) =>
-      #ValueS256 0
+      #DefaultValue s256 =>
+      ListItem(#ValueS256 0)
       ...
     </k>
 
