@@ -41,6 +41,7 @@ module YUL-CONFIGURATION
         </cEnvironment>
       </cEnvironmentStack>
       <cEnvironmentStackCopies> .List </cEnvironmentStackCopies>
+      <cDebug> .List </cDebug>
     </T>
 
 endmodule

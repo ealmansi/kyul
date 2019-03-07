@@ -226,6 +226,25 @@ module YUL-SEMANTICS
     </k>
 
   /**
+   * Debug
+   */
+
+  rule
+    <k>
+      `Debug`(
+        I:Identifier
+      ) =>
+      .
+      ...
+    </k>
+    <cVariable>
+      <cVariableName> I </cVariableName>
+      <cVariableValue> VV </cVariableValue>
+      ...
+    </cVariable>
+    <cDebug> ... .List => ListItem(VV) </cDebug>
+
+  /**
    * StatementSequenceHoist
    */
 

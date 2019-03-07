@@ -13,8 +13,7 @@ module YUL-SYNTAX
       [klabel(Block2)]
 
   syntax Break ::=
-    "break"
-      [token]
+    "break" [token]
 
   syntax Case ::=
     "case" TypedLiteral Block
@@ -30,8 +29,7 @@ module YUL-SYNTAX
       [klabel(Code)]
 
   syntax Continue ::=
-    "continue"
-      [token]
+    "continue" [token]
 
   syntax Data ::=
     "data" LiteralString LiteralHex
@@ -40,8 +38,8 @@ module YUL-SYNTAX
       [klabel(Data2)]
 
   syntax Debug ::=
-    "#debug"
-      [token]
+    "#debug" Identifier
+      [klabel(Debug)]
 
   syntax Default ::=
     "default" Block
@@ -103,20 +101,17 @@ module YUL-SYNTAX
     LiteralHexSingle
 
   syntax LiteralHexDouble ::=
-    r"hex\\\"([0-9a-fA-F][0-9a-fA-F])*\\\""
-      [token]
+    r"hex\\\"([0-9a-fA-F][0-9a-fA-F])*\\\"" [token]
 
   syntax LiteralHexSingle ::=
-    r"hex'([0-9a-fA-F][0-9a-fA-F])*'"
-      [token]
+    r"hex'([0-9a-fA-F][0-9a-fA-F])*'" [token]
 
   syntax LiteralNumber ::=
     LiteralNumberInt |
     LiteralNumberHex
 
   syntax LiteralNumberHex ::=
-    r"0x[0-9a-fA-F][0-9a-fA-F]*"
-      [token]
+    r"0x[0-9a-fA-F][0-9a-fA-F]*" [token]
 
   syntax LiteralNumberInt ::=
     Int
