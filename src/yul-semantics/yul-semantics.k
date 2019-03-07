@@ -52,7 +52,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #AssignmentRecursive (ListItem(I) IL):List (ListItem(V) VL):List =>
+      #AssignmentRecursive (ListItem(I:Identifier) IL:List) (ListItem(V:Value) VL:List) =>
       #AssignmentRecursive IL VL
       ...
     </k>
@@ -239,7 +239,7 @@ module YUL-SEMANTICS
     </k>
     <cVariable>
       <cVariableName> I </cVariableName>
-      <cVariableValue> VV </cVariableValue>
+      <cVariableValue> VV:Value </cVariableValue>
       ...
     </cVariable>
     <cDebug> ... .List => ListItem(VV) </cDebug>
@@ -271,7 +271,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #StatementSequenceHoistRecursive (ListItem(S) SS1):List SS2:List SS3:List =>
+      #StatementSequenceHoistRecursive (ListItem(S:Statement) SS1:List) SS2:List SS3:List =>
       #StatementSequenceHoistRecursiveHeat S SS1 SS2 SS3
       ...
     </k>
@@ -306,7 +306,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #StatementSequenceHoistSpread (ListItem(S) SS):List =>
+      #StatementSequenceHoistSpread (ListItem(S:Statement) SS:List) =>
       #StatementSequenceHoistSpread SS ~> S
       ...
     </k>
@@ -410,14 +410,14 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #FunctionArgumentsRecursive (ListItem(E) EL):List VL:List =>
+      #FunctionArgumentsRecursive (ListItem(E:Expression) EL:List) VL:List =>
       E ~> #FunctionArgumentsRecursiveCool EL VL
       ...
     </k>
 
   rule
     <k>
-      ListItem(V) ~> #FunctionArgumentsRecursiveCool EL:List VL:List =>
+      ListItem(V:Value) ~> #FunctionArgumentsRecursiveCool EL:List VL:List =>
       #FunctionArgumentsRecursive EL (ListItem(V) VL)
       ...
     </k>
@@ -481,7 +481,7 @@ module YUL-SEMANTICS
     </k>
     <cFunction>
       <cFunctionName> I </cFunctionName>
-      <cFunctionBody> FB </cFunctionBody>
+      <cFunctionBody> FB:Block </cFunctionBody>
       ...
     </cFunction>
 
@@ -499,7 +499,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #FunctionCallDeclareArguments I1:Identifier I2:Int (ListItem(V) VL):List =>
+      #FunctionCallDeclareArguments I1:Identifier I2:Int (ListItem(V:Value) VL:List) =>
       (
         ListItem(V) ~> #VariableDeclarationOne FPN FPT ~>
         #FunctionCallDeclareArguments I1 (I2 +Int 1) VL
@@ -510,8 +510,8 @@ module YUL-SEMANTICS
       <cFunctionName> I1 </cFunctionName>
       <cFunctionParameters>
         <cFunctionParameterIndex> I2 </cFunctionParameterIndex>
-        <cFunctionParameterName> FPN </cFunctionParameterName>
-        <cFunctionParameterType> FPT </cFunctionParameterType>
+        <cFunctionParameterName> FPN:Identifier </cFunctionParameterName>
+        <cFunctionParameterType> FPT:TypeName </cFunctionParameterType>
         ...
       </cFunctionParameters>
       ...
@@ -542,8 +542,8 @@ module YUL-SEMANTICS
       <cFunctionName> I1 </cFunctionName>
       <cFunctionReturnParameters>
         <cFunctionReturnParameterIndex> I2 </cFunctionReturnParameterIndex>
-        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
-        <cFunctionReturnParameterType> FRPT </cFunctionReturnParameterType>
+        <cFunctionReturnParameterName> FRPN:Identifier </cFunctionReturnParameterName>
+        <cFunctionReturnParameterType> FRPT:TypeName </cFunctionReturnParameterType>
         ...
       </cFunctionReturnParameters>
       ...
@@ -579,14 +579,14 @@ module YUL-SEMANTICS
       <cFunctionName> I1 </cFunctionName>
       <cFunctionReturnParameters>
         <cFunctionReturnParameterIndex> I2 </cFunctionReturnParameterIndex>
-        <cFunctionReturnParameterName> FRPN </cFunctionReturnParameterName>
+        <cFunctionReturnParameterName> FRPN:Identifier </cFunctionReturnParameterName>
         ...
       </cFunctionReturnParameters>
       ...
     </cFunction>
     <cVariable>
       <cVariableName> FRPN </cVariableName>
-      <cVariableValue> VV </cVariableValue>
+      <cVariableValue> VV:Value </cVariableValue>
       ...
     </cVariable>
 
@@ -603,7 +603,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      (ListItem(V) VL):List ~> #FunctionCallReturn =>
+      (ListItem(V:Value) VL:List) ~> #FunctionCallReturn =>
       (
         #EnvironmentPop ~>
         #EnvironmentRestore ~>
@@ -685,7 +685,7 @@ module YUL-SEMANTICS
       ...
     </k>
     <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
+      <cSymbolTableStackSize> STSS:Int </cSymbolTableStackSize>
       <cSymbolTable>
         <cSymbolTableIndex> STSS -Int 1 </cSymbolTableIndex>
         (
@@ -711,17 +711,17 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #FunctionDefinitionParameters I1:Identifier (ListItem(`TypedIdentifier`(I2, TN)) TIL):List =>
+      #FunctionDefinitionParameters I1:Identifier (ListItem(`TypedIdentifier`(I2:Identifier, TN:TypeName)) TIL:List) =>
       #FunctionDefinitionParameters I1 TIL
       ...
     </k>
     <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
+      <cSymbolTableStackSize> STSS:Int </cSymbolTableStackSize>
       <cSymbolTable>
         <cSymbolTableIndex> STSS -Int 1 </cSymbolTableIndex>
         <cFunction>
           <cFunctionName> I1 </cFunctionName>
-          <cFunctionArity> FA => FA +Int 1 </cFunctionArity>
+          <cFunctionArity> FA:Int => FA +Int 1 </cFunctionArity>
           (
             .Bag =>
             <cFunctionParameters>
@@ -746,17 +746,17 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #FunctionDefinitionReturnParameters I1:Identifier (ListItem(`TypedIdentifier`(I2, TN)) TIL):List =>
+      #FunctionDefinitionReturnParameters I1:Identifier (ListItem(`TypedIdentifier`(I2:Identifier, TN:TypeName)) TIL:List) =>
       #FunctionDefinitionReturnParameters I1 TIL
       ...
     </k>
     <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS </cSymbolTableStackSize>
+      <cSymbolTableStackSize> STSS:Int </cSymbolTableStackSize>
       <cSymbolTable>
         <cSymbolTableIndex> STSS -Int 1 </cSymbolTableIndex>
         <cFunction>
           <cFunctionName> I1 </cFunctionName>
-          <cFunctionReturnArity> FRA => FRA +Int 1 </cFunctionReturnArity>
+          <cFunctionReturnArity> FRA:Int => FRA +Int 1 </cFunctionReturnArity>
           (
             .Bag =>
             <cFunctionReturnParameters>
@@ -784,7 +784,7 @@ module YUL-SEMANTICS
     </k>
     <cVariable>
       <cVariableName> I </cVariableName>
-      <cVariableValue> VV </cVariableValue>
+      <cVariableValue> VV:Value </cVariableValue>
       ...
     </cVariable>
 
@@ -917,7 +917,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      ListItem(V) ~> #SwitchCool CS1:List CS2:List =>
+      ListItem(V:Value) ~> #SwitchCool CS1:List CS2:List =>
       #SwitchRecursive V CS1 CS2
       ...
     </k>
@@ -931,14 +931,14 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #SwitchRecursive V:Value .List ListItem(`Default`(B)) =>
+      #SwitchRecursive V:Value .List ListItem(`Default`(B:Block)) =>
       B
       ...
     </k>
 
   rule
     <k>
-      #SwitchRecursive V:Value (ListItem(`Case`(TL, B)) CS1):List CS2:List =>
+      #SwitchRecursive V:Value (ListItem(`Case`(TL:TypedLiteral, B:Block)) CS1:List) CS2:List =>
       #SwitchRecursiveHeat TL V B CS1 CS2
       ...
     </k>
@@ -952,7 +952,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      ListItem(V1) ~> #SwitchRecursiveCool V2:Value B:Block CS1:List CS2:List =>
+      ListItem(V1:Value) ~> #SwitchRecursiveCool V2:Value B:Block CS1:List CS2:List =>
       (
         #if V1 ==K V2
         #then
@@ -1127,7 +1127,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #VariableDeclarationDefaultValues (ListItem(`TypedIdentifier`(I, TN)) TIL):List =>
+      #VariableDeclarationDefaultValues (ListItem(`TypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
       (
         #DefaultValue TN ~> #VariableDeclarationOne I TN ~>
         #VariableDeclarationDefaultValues TIL
@@ -1137,12 +1137,12 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      ListItem(V) ~> #VariableDeclarationOne I:Identifier TN:TypeName =>
+      ListItem(V:Value) ~> #VariableDeclarationOne I:Identifier TN:TypeName =>
       .
       ...
     </k>
     <cEnvironmentStack>
-      <cEnvironmentStackSize> ESS </cEnvironmentStackSize>
+      <cEnvironmentStackSize> ESS:Int </cEnvironmentStackSize>
       <cEnvironment>
         <cEnvironmentIndex> ESS -Int 1 </cEnvironmentIndex>
         (
@@ -1181,7 +1181,7 @@ module YUL-SEMANTICS
 
   rule
     <k>
-      #VariableDeclarationMany (ListItem(`TypedIdentifier`(I, TN)) TIL):List (ListItem(V) VL):List =>
+      #VariableDeclarationMany (ListItem(`TypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) (ListItem(V:Value) VL:List) =>
       (
         ListItem(V) ~> #VariableDeclarationOne I TN ~>
         #VariableDeclarationMany TIL VL

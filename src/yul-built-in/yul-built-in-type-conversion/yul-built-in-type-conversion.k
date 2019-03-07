@@ -147,7 +147,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueS256 I) ~> #BuiltInS256ToBool =>
+      ListItem(#ValueS256 I:Int) ~> #BuiltInS256ToBool =>
       ListItem(#ValueBool (I =/=Int 0))
       ...
     </k>
@@ -165,7 +165,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueS256 I) ~> #BuiltInS256ToU256 =>
+      ListItem(#ValueS256 I:Int) ~> #BuiltInS256ToU256 =>
       ListItem(#ValueU256 (I modInt (2 ^Int 256)))
       ...
     </k>
@@ -183,7 +183,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueS256 I) ~> #BuiltInS256ToU32 =>
+      ListItem(#ValueS256 I:Int) ~> #BuiltInS256ToU32 =>
       ListItem(#ValueU32 (I modInt (2 ^Int 32)))
       ...
     </k>
@@ -201,7 +201,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueS256 I) ~> #BuiltInS256ToU64 =>
+      ListItem(#ValueS256 I:Int) ~> #BuiltInS256ToU64 =>
       ListItem(#ValueU64 (I modInt (2 ^Int 64)))
       ...
     </k>
@@ -219,7 +219,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInU256ToBool =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInU256ToBool =>
       ListItem(#ValueBool (I =/=Int 0))
       ...
     </k>
@@ -237,7 +237,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInU256ToS256 =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInU256ToS256 =>
       #if I <Int (2 ^Int 255)
       #then
         ListItem(#ValueS256 I)
@@ -260,7 +260,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInU256ToU32 =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInU256ToU32 =>
       ListItem(#ValueU32 (I modInt (2 ^Int 32)))
       ...
     </k>
@@ -278,7 +278,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInU256ToU64 =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInU256ToU64 =>
       ListItem(#ValueU64 (I modInt (2 ^Int 64)))
       ...
     </k>
@@ -296,7 +296,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU32 I) ~> #BuiltInU32ToBool =>
+      ListItem(#ValueU32 I:Int) ~> #BuiltInU32ToBool =>
       ListItem(#ValueBool (I =/=Int 0))
       ...
     </k>
@@ -314,7 +314,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU32 I) ~> #BuiltInU32ToS256 =>
+      ListItem(#ValueU32 I:Int) ~> #BuiltInU32ToS256 =>
       ListItem(#ValueS256 I)
       ...
     </k>
@@ -332,7 +332,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU32 I) ~> #BuiltInU32ToU256 =>
+      ListItem(#ValueU32 I:Int) ~> #BuiltInU32ToU256 =>
       ListItem(#ValueU256 I)
       ...
     </k>
@@ -350,7 +350,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU32 I) ~> #BuiltInU32ToU64 =>
+      ListItem(#ValueU32 I:Int) ~> #BuiltInU32ToU64 =>
       ListItem(#ValueU64 I)
       ...
     </k>
@@ -368,7 +368,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU64 I) ~> #BuiltInU64ToBool =>
+      ListItem(#ValueU64 I:Int) ~> #BuiltInU64ToBool =>
       ListItem(#ValueBool (I =/=Int 0))
       ...
     </k>
@@ -386,7 +386,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU64 I) ~> #BuiltInU64ToS256 =>
+      ListItem(#ValueU64 I:Int) ~> #BuiltInU64ToS256 =>
       ListItem(#ValueS256 I)
       ...
     </k>
@@ -404,7 +404,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU64 I) ~> #BuiltInU64ToU256 =>
+      ListItem(#ValueU64 I:Int) ~> #BuiltInU64ToU256 =>
       ListItem(#ValueU256 I)
       ...
     </k>
@@ -422,7 +422,7 @@ module YUL-BUILT-IN-TYPE-CONVERSION
 
   rule
     <k>
-      ListItem(#ValueU64 I) ~> #BuiltInU64ToU32 =>
+      ListItem(#ValueU64 I:Int) ~> #BuiltInU64ToU32 =>
       ListItem(#ValueU32 (I modInt (2 ^Int 32)))
       ...
     </k>

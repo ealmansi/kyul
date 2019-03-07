@@ -54,7 +54,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ListItem(#ValueU256 I3) ~> #BuiltInAddModU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ListItem(#ValueU256 I3:Int) ~> #BuiltInAddModU256 =>
       ListItem(#ValueU256 ((I1 +Int I2) modInt I3))
       ...
     </k>
@@ -74,7 +74,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInAddU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInAddU256 =>
       ListItem(#ValueU256 ((I1 +Int I2) modInt (2 ^Int 256)))
       ...
     </k>
@@ -107,7 +107,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInByte =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInByte =>
       ListItem(#ValueU256 ((I2 /Int (256 ^Int (31 -Int I1))) modInt 256))
       ...
     </k>
@@ -128,7 +128,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInDivS256 =>
+      ListItem(#ValueS256 I1:Int) ListItem(#ValueS256 I2:Int) ~> #BuiltInDivS256 =>
       ListItem(#ValueS256 (I1 /Int I2))
       ...
     </k>
@@ -148,7 +148,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInDivU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInDivU256 =>
       ListItem(#ValueU256 (I1 /Int I2))
       ...
     </k>
@@ -168,7 +168,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInEqU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInEqU256 =>
       ListItem(#ValueBool (I1 ==Int I2))
       ...
     </k>
@@ -188,7 +188,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInExpU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInExpU256 =>
       ListItem(#ValueU256 ((I1 ^Int I2) modInt (2 ^Int 256)))
       ...
     </k>
@@ -208,7 +208,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInGtS256 =>
+      ListItem(#ValueS256 I1:Int) ListItem(#ValueS256 I2:Int) ~> #BuiltInGtS256 =>
       ListItem(#ValueBool (I1 >Int I2))
       ...
     </k>
@@ -228,7 +228,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInGtU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInGtU256 =>
       ListItem(#ValueBool (I1 >Int I2))
       ...
     </k>
@@ -248,7 +248,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInIsZeroU256 =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInIsZeroU256 =>
       ListItem(#ValueBool (I ==Int 0))
       ...
     </k>
@@ -268,7 +268,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInLtS256 =>
+      ListItem(#ValueS256 I1:Int) ListItem(#ValueS256 I2:Int) ~> #BuiltInLtS256 =>
       ListItem(#ValueBool (I1 <Int I2))
       ...
     </k>
@@ -288,7 +288,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInLtU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInLtU256 =>
       ListItem(#ValueBool (I1 <Int I2))
       ...
     </k>
@@ -308,7 +308,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueS256 I1) ListItem(#ValueS256 I2) ~> #BuiltInModS256 =>
+      ListItem(#ValueS256 I1:Int) ListItem(#ValueS256 I2:Int) ~> #BuiltInModS256 =>
       ListItem(#ValueS256 (I1 %Int I2))
       ...
     </k>
@@ -328,7 +328,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInModU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInModU256 =>
       ListItem(#ValueU256 (I1 modInt I2))
       ...
     </k>
@@ -348,7 +348,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ListItem(#ValueU256 I3) ~> #BuiltInMulModU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ListItem(#ValueU256 I3:Int) ~> #BuiltInMulModU256 =>
       ListItem(#ValueU256 ((I1 *Int I2) modInt I3))
       ...
     </k>
@@ -368,7 +368,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInMulU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInMulU256 =>
       ListItem(#ValueU256 ((I1 *Int I2) modInt (2 ^Int 256)))
       ...
     </k>
@@ -388,7 +388,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I) ~> #BuiltInNotU256 =>
+      ListItem(#ValueU256 I:Int) ~> #BuiltInNotU256 =>
       ListItem(#ValueU256 (((2 ^Int 256) -Int 1) -Int I))
       ...
     </k>
@@ -473,7 +473,7 @@ module YUL-BUILT-IN-ARITHMETIC
 
   rule
     <k>
-      ListItem(#ValueU256 I1) ListItem(#ValueU256 I2) ~> #BuiltInSubU256 =>
+      ListItem(#ValueU256 I1:Int) ListItem(#ValueU256 I2:Int) ~> #BuiltInSubU256 =>
       ListItem(#ValueU256 ((I1 -Int I2) modInt (2 ^Int 256)))
       ...
     </k>

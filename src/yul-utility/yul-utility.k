@@ -27,7 +27,7 @@ module YUL-UTILITY
       ...
     </k>
     <cEnvironmentStack>
-      <cEnvironmentStackSize> ESS => ESS -Int 1 </cEnvironmentStackSize>
+      <cEnvironmentStackSize> ESS:Int => ESS -Int 1 </cEnvironmentStackSize>
       (
         (
           <cEnvironment>
@@ -47,7 +47,7 @@ module YUL-UTILITY
       ...
     </k>
     <cEnvironmentStack>
-      <cEnvironmentStackSize> ESS => ESS +Int 1 </cEnvironmentStackSize>
+      <cEnvironmentStackSize> ESS:Int => ESS +Int 1 </cEnvironmentStackSize>
       (
         .Bag =>
         (
@@ -67,7 +67,7 @@ module YUL-UTILITY
       ...
     </k>
     <cEnvironmentStack>
-      ES =>
+      ES:Bag =>
       <cEnvironmentStackSize> 0 </cEnvironmentStackSize>
     </cEnvironmentStack>
     <cEnvironmentStackCopies>
@@ -83,11 +83,11 @@ module YUL-UTILITY
       ...
     </k>
     <cEnvironmentStack>
-      _ =>
+      _:Bag =>
       ES
     </cEnvironmentStack>
     <cEnvironmentStackCopies>
-      ListItem(<cEnvironmentStack> ES </cEnvironmentStack>) =>
+      ListItem(<cEnvironmentStack> ES:Bag </cEnvironmentStack>) =>
       .List
       ...
     </cEnvironmentStackCopies>
@@ -99,7 +99,7 @@ module YUL-UTILITY
       ...
     </k>
     <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS => STSS -Int 1 </cSymbolTableStackSize>
+      <cSymbolTableStackSize> STSS:Int => STSS -Int 1 </cSymbolTableStackSize>
       (
         (
           <cSymbolTable>
@@ -119,7 +119,7 @@ module YUL-UTILITY
       ...
     </k>
     <cSymbolTableStack>
-      <cSymbolTableStackSize> STSS => STSS +Int 1 </cSymbolTableStackSize>
+      <cSymbolTableStackSize> STSS:Int => STSS +Int 1 </cSymbolTableStackSize>
       (
         .Bag =>
         (
@@ -275,7 +275,13 @@ module YUL-UTILITY
   rule reverseList(.List) =>
     .List
 
-  rule reverseList(ListItem(H) L) =>
-    reverseList(L) ListItem(H)
+  rule reverseList((ListItem(E:Expression) EL:List):List) =>
+    reverseList(EL) ListItem(E)
+  
+  rule reverseList((ListItem(V:Value) VL:List):List) =>
+    reverseList(VL) ListItem(V)
+
+  rule reverseList((ListItem(S:Statement) SS:List):List) =>
+    reverseList(SS) ListItem(S)
 
 endmodule

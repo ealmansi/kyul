@@ -38,28 +38,28 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #BuiltInAnd (ListItem(E1) ListItem(E2) .List) =>
+      #BuiltInAnd (ListItem(E1:Expression) ListItem(E2:Expression) .List) =>
       E1 ~> #BuiltInAndCool1 E2
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool true) ~> #BuiltInAndCool1 E =>
+      ListItem(#ValueBool true) ~> #BuiltInAndCool1 E:Expression =>
       E ~> #BuiltInAndCool2
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool B) ~> #BuiltInAndCool2 =>
+      ListItem(#ValueBool B:Bool) ~> #BuiltInAndCool2 =>
       ListItem(#ValueBool B)
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool false) ~> #BuiltInAndCool1 E =>
+      ListItem(#ValueBool false) ~> #BuiltInAndCool1 E:Expression =>
       ListItem(#ValueBool false)
       ...
     </k>
@@ -77,14 +77,14 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #BuiltInNot (ListItem(E) .List) =>
+      #BuiltInNot (ListItem(E:Expression) .List) =>
       E ~> #BuiltInNotCool
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool B) ~> #BuiltInNotCool =>
+      ListItem(#ValueBool B:Bool) ~> #BuiltInNotCool =>
       ListItem(#ValueBool (notBool B))
       ...
     </k>
@@ -102,28 +102,28 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #BuiltInOr (ListItem(E1) ListItem(E2) .List) =>
+      #BuiltInOr (ListItem(E1:Expression) ListItem(E2:Expression) .List) =>
       E1 ~> #BuiltInOrCool1 E2
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool true) ~> #BuiltInOrCool1 E =>
+      ListItem(#ValueBool true) ~> #BuiltInOrCool1 E:Expression =>
       ListItem(#ValueBool true)
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool false) ~> #BuiltInOrCool1 E =>
+      ListItem(#ValueBool false) ~> #BuiltInOrCool1 E:Expression =>
       E ~> #BuiltInOrCool2
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool B) ~> #BuiltInOrCool2 =>
+      ListItem(#ValueBool B:Bool) ~> #BuiltInOrCool2 =>
       ListItem(#ValueBool B)
       ...
     </k>
@@ -141,21 +141,21 @@ module YUL-BUILT-IN-LOGIC
 
   rule
     <k>
-      #BuiltInXor (ListItem(E1) ListItem(E2) .List) =>
+      #BuiltInXor (ListItem(E1:Expression) ListItem(E2:Expression) .List) =>
       E1 ~> #BuiltInXorCool1 E2
       ...
     </k>
 
   rule
     <k>
-      VL:List ~> #BuiltInXorCool1 E =>
+      VL:List ~> #BuiltInXorCool1 E:Expression =>
       E ~> VL ~> #BuiltInXorCool2
       ...
     </k>
 
   rule
     <k>
-      ListItem(#ValueBool B1) ~> ListItem(#ValueBool B2) ~> #BuiltInXorCool2 =>
+      ListItem(#ValueBool B1:Bool) ~> ListItem(#ValueBool B2:Bool) ~> #BuiltInXorCool2 =>
       ListItem(#ValueBool (B1 xorBool B2))
       ...
     </k>
