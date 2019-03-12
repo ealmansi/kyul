@@ -7,7 +7,65 @@ module SPEC
   rule
     <T>
       <k>
-        `Block2`(`StatementSequence`(`StatementSequence`(`VariableDeclaration2`(`TypedIdentifier`(#token("x","Id"),#token("u256","TypeNameBuiltIn")),`TypedLiteral`(X:Int,#token("u256","TypeNameBuiltIn"))),`VariableDeclaration2`(`TypedIdentifier`(#token("y","Id"),#token("u256","TypeNameBuiltIn")),`FunctionCall2`(#token("addu256","Id"),`ExpressionList`(#token("x","Id"),#token("x","Id"))))),`Debug`(#token("y","Id"))))
+        `Block2`(
+          `StatementSequence`(
+            `StatementSequence`(
+              `VariableDeclaration2`(
+                `TypedIdentifier`(
+                  #token(
+                    "x",
+                    "Id"
+                  ),
+                  #token(
+                    "u256",
+                    "TypeNameBuiltIn"
+                  )
+                ),
+                `TypedLiteral`(
+                  X:Int,
+                  #token(
+                    "u256",
+                    "TypeNameBuiltIn"
+                  )
+                )
+              ),
+              `VariableDeclaration2`(
+                `TypedIdentifier`(
+                  #token(
+                    "y",
+                    "Id"
+                  ),
+                  #token(
+                    "u256",
+                    "TypeNameBuiltIn"
+                  )
+                ),
+                `FunctionCall2`(
+                  #token(
+                    "addu256",
+                    "Id"
+                  ),
+                  `ExpressionList`(
+                    #token(
+                      "x",
+                      "Id"
+                    ),
+                    #token(
+                      "x",
+                      "Id"
+                    )
+                  )
+                )
+              )
+            ),
+            `Debug`(
+              #token(
+                "y",
+                "Id"
+              )
+            )
+          )
+        )
         =>
         .
       </k>
