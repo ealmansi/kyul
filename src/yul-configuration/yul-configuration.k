@@ -41,6 +41,7 @@ module YUL-CONFIGURATION
         </cEnvironment>
       </cEnvironmentStack>
       <cEnvironmentStackCopies> .List </cEnvironmentStackCopies>
+      <cStdout stream="stdout"> .List </cStdout>
       <cDebug> .List </cDebug>
     </T>
 

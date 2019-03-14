@@ -33,7 +33,23 @@ module YUL-TYPE-CHECK
     "#TypeCheck" TypedIdentifier |
     "#TypeCheck" TypedIdentifierList |
     "#TypeCheck" TypedLiteral |
-    "#TypeCheck" VariableDeclaration
+    "#TypeCheck" VariableDeclaration |
+    TypeCheckResult
+
+  syntax Type ::=
+    "#Type" |
+    "#TypeTuple" Int List
+
+  syntax TypeCheckResult ::=
+    "#TypeCheckError" String |
+    "#TypeCheckSuccess" Type
+
+  rule
+    <k>
+      #TypeCheckError S:String ~> _:K =>
+      .
+    </k>
+    <cStdout> ... .List => ListItem(S) </cStdout>
 
   rule
     <k>
@@ -41,21 +57,58 @@ module YUL-TYPE-CHECK
       #TypeCheck P
     </k>
 
+  /**
+   * Assignment.
+   */
+  
+  syntax KItem ::=
+    "#TypeCheckAssignment1" Expression |
+    "#TypeCheckAssignment2" Type
+
   rule
     <k>
       #TypeCheck `Assignment`(
         IL:IdentifierList,
         E:Expression
       ) =>
-      .
+      #TypeCheck IL ~> #TypeCheckAssignment1 E
+      ...
     </k>
 
+  rule
+    <k>
+      (#TypeCheckSuccess T:Type):TypeCheckResult ~> #TypeCheckAssignment1 E:Expression =>
+      #TypeCheck E ~> #TypeCheckAssignment2 T
+      ...
+    </k>
+
+  rule
+    <k>
+      (#TypeCheckSuccess T1:Type):TypeCheckResult ~> #TypeCheckAssignment2 T2:Type =>
+      #TypeCheckSuccess (#TypeTuple 0 .List)
+      ...
+    </k>
+    requires T1 ==K T2
+
+  rule
+    <k>
+      (#TypeCheckSuccess T1:Type):TypeCheckResult ~> #TypeCheckAssignment2 T2:Type =>
+      #TypeCheckError "Assignment"
+      ...
+    </k>
+    requires T1 =/=K T2
+
+  /**
+   * Block.
+   */
+  
   rule
     <k>
       #TypeCheck `Block1`(
         .KList
       ) =>
-      .
+      #TypeCheckSuccess (#TypeTuple 0 .List)
+      ...
     </k>
 
   rule
@@ -63,16 +116,113 @@ module YUL-TYPE-CHECK
       #TypeCheck `Block2`(
         SS:StatementSequence
       ) =>
-      .
+      #TypeCheckStatementSequence toBuiltInList(SS)
+      ...
+    </k>
+  
+  rule
+    <k>
+      #TypeCheckStatementSequence SS:List =>
+      (
+        #TypeCheckStatementSequenceFirstPass1 SS ~>
+        #TypeCheckStatementSequenceSecondPass SS
+      )
+      ...
     </k>
 
   rule
     <k>
-      #TypeCheck `Case`(
+      #TypeCheckStatementSequenceFirstPass1 .List =>
+      .
+      ...
+    </k>
+
+  rule
+    <k>
+      #TypeCheckStatementSequenceFirstPass1 (ListItem(S:Statement) SS:List):List =>
+      #IsFunctionDefinition S ~> #TypeCheckStatementSequenceFirstPass2 S SS
+      ...
+    </k>
+
+  rule
+    <k>
+      true ~> #TypeCheckStatementSequenceFirstPass2 S:Statement SS:List =>
+      (
+        #TypeCheckStatementSequenceDefineFunction1 S ~>
+        #TypeCheckStatementSequenceFirstPass1 SS
+      )
+      ...
+    </k>
+
+  rule
+    <k>
+      false ~> #TypeCheckStatementSequenceFirstPass2 S:Statement SS:List =>
+      #TypeCheckStatementSequenceFirstPass1 SS
+      ...
+    </k>
+
+  rule
+    <k>
+      #TypeCheckStatementSequenceDefineFunction1 `FunctionDefinition1`(
+        I:Identifier,
         B:Block
       ) =>
-      .
+      #TypeCheckStatementSequenceDefineFunction2 I .List .List
+      ...
     </k>
+
+  rule
+    <k>
+      #TypeCheckStatementSequenceDefineFunction1 `FunctionDefinition2`(
+        I:Identifier,
+        TIL:TypedIdentifierList,
+        B:Block
+      ) =>
+      #TypeCheckStatementSequenceDefineFunction2 I toBuiltInList(TIL) .List
+      ...
+    </k>
+
+  rule
+    <k>
+      #TypeCheckStatementSequenceDefineFunction1 `FunctionDefinition3`(
+        I:Identifier,
+        TIL:TypedIdentifierList,
+        B:Block
+      ) =>
+      #TypeCheckStatementSequenceDefineFunction2 I .List toBuiltInList(TIL)
+      ...
+    </k>
+
+  rule
+    <k>
+      #TypeCheckStatementSequenceDefineFunction1 `FunctionDefinition4`(
+        I:Identifier,
+        TIL1:TypedIdentifierList,
+        TIL2:TypedIdentifierList,
+        B:Block
+      ) =>
+      #TypeCheckStatementSequenceDefineFunction2 I toBuiltInList(TIL1) toBuiltInList(TIL2)
+      ...
+    </k>
+  
+  rule
+    <k>
+      #TypeCheckStatementSequenceDefineFunction2 I:Identifier TIL1:List TIL2:List =>
+      
+      ...
+    </k>
+
+  
+
+  // rule
+  //   <k>
+  //     #TypeCheck `Case`(
+  //       TL: TypedLiteral,
+  //       B:Block
+  //     ) =>
+  //     // check t(switch exp) = t(TL)
+  //     .
+  //   </k>
 
   rule
     <k>
@@ -108,6 +258,8 @@ module YUL-TYPE-CHECK
         B2:Block,
         B3:Block
       ) =>
+      // check t(E) = bool
+      // typecheck B1, B2, B3 (mmm)
       .
     </k>
 
