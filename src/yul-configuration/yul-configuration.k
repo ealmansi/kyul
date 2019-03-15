@@ -7,6 +7,12 @@ module YUL-CONFIGURATION
   configuration
     <T>
       <k> $PGM:Program </k>
+      <cSignature>
+        .Map
+      </cSignature>
+      <cContext>
+        .Map
+      </cContext>
       <cSymbolTableStack>
         <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
         <cSymbolTable multiplicity="*">

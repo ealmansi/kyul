@@ -7,64 +7,47 @@ module SPEC
   rule
     <T>
       <k>
-        `Block2`(
-          `StatementSequence`(
-            `StatementSequence`(
-              `VariableDeclaration2`(
-                `TypedIdentifier`(
-                  #token(
-                    "x",
-                    "Id"
-                  ),
-                  #token(
-                    "u256",
-                    "TypeNameBuiltIn"
-                  )
-                ),
-                `TypedLiteral`(
-                  X:Int,
-                  #token(
-                    "u256",
-                    "TypeNameBuiltIn"
-                  )
-                )
-              ),
-              `VariableDeclaration2`(
-                `TypedIdentifier`(
-                  #token(
-                    "y",
-                    "Id"
-                  ),
-                  #token(
-                    "u256",
-                    "TypeNameBuiltIn"
-                  )
-                ),
-                `FunctionCall2`(
-                  #token(
-                    "addu256",
-                    "Id"
-                  ),
-                  `ExpressionList`(
-                    #token(
-                      "x",
-                      "Id"
-                    ),
-                    #token(
-                      "x",
-                      "Id"
-                    )
-                  )
-                )
-              )
-            ),
-            `Debug`(
-              #token(
-                "y",
-                "Id"
-              )
-            )
-          )
+        #AstBlock ListItem (
+          #AstVariableDeclaration2 ListItem (
+            #AstTypedIdentifier #token(
+              "x",
+              "Id"
+            ) #token(
+              "u256",
+              "TypeNameBuiltIn"
+            ) 
+          ) #AstTypedLiteral 3 #token(
+            "u256",
+            "TypeNameBuiltIn"
+          ) 
+        ) ListItem (
+          #AstVariableDeclaration2 ListItem (
+            #AstTypedIdentifier #token(
+              "y",
+              "Id"
+            ) #token(
+              "u256",
+              "TypeNameBuiltIn"
+            ) 
+          ) #AstFunctionCall #token(
+              "addu256",
+              "Id"
+            ) ListItem (
+            #token(
+              "x",
+              "Id"
+            ) 
+          ) ListItem (
+            #token(
+              "x",
+              "Id"
+            ) 
+          ) 
+        ) ListItem (
+          #AstDebug #token(
+            "y",
+            "Id"
+          ) 
         )
         =>
         .
@@ -76,6 +59,7 @@ module SPEC
         <cEnvironmentStackSize> 0 => 0 </cEnvironmentStackSize>
       </cEnvironmentStack>
       <cEnvironmentStackCopies> .List => .List </cEnvironmentStackCopies>
+      <cStdout> .List </cStdout>
       <cDebug>
         .List =>
         ListItem ( #ValueU256 (X +Int X) )
