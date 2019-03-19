@@ -400,7 +400,7 @@ module YUL-AST
     toAstTypedIdentifierList(TIL) ListItem(toAstTypedIdentifier(TI))
 
   syntax AstTypedLiteral ::=
-    "#AstTypedLiteral" Literal TypeName |
+    "#AstTypedLiteral" Literal TypeName [klabel(AstTypedLiteral)] |
     toAstTypedLiteral(TypedLiteral) [function]
 
   rule

@@ -12,252 +12,630 @@ module YUL-TYPE-CHECK
   // imports YUL-UTILITY
   // imports YUL-VALUE
 
-  syntax Bool ::= isAstFunctionDefinition(AstStatement)
+  syntax Bool ::=
+    isAstFunctionDefinition(AstStatement)
 
-  syntax KItem ::=
-    checkTypeProgram(AstProgram) |
-    checkTypeBlock(AstBlock) |
-    checkTypeStatementSequence(List) |
-    checkTypeStatementSequenceFirstPass(List) |
-    checkTypeStatementSequenceSecondPass(List) |
-    checkTypeStatement(AstStatement) |
-    updateEnvironmentFunctionDefinition(AstStatement)
+  syntax Type ::=
+    ".Type" |
+    TypeFunction |
+    TypeName |
+    TypeTuple
+
+  syntax TypeFunction ::=
+    TypeFunction(TypeTuple, TypeTuple)
+
+  syntax TypeTuple ::=
+    TypeTuple(Int, List)
+
+  /**
+   * getEmptyTypeTuple
+   */
+
+  syntax TypeTuple ::=
+    getEmptyTypeTuple() [function]
+
+  rule
+    getEmptyTypeTuple() =>
+    TypeTuple(0, .List)
+
+  /**
+   * getFunctionDefinitionName
+   */
 
   syntax Identifier ::=
-    getNameFunctionDefinition(AstFunctionDefinition) [function]
-  
+    getFunctionDefinitionName(AstFunctionDefinition) [function]
+
+  rule
+    getFunctionDefinitionName(`AstFunctionDefinition`(
+      I:Identifier, TIL1:List, TIL2:List, B:AstBlock
+    )) =>
+    I
+
+  /**
+   * getFunctionDefinitionType
+   */
+
   syntax Type ::=
-    getTypeFunctionDefinition(AstFunctionDefinition) [function]
-  
+    getFunctionDefinitionType(AstFunctionDefinition) [function]
+
+  rule
+    getFunctionDefinitionType(`AstFunctionDefinition`(
+      I:Identifier, TIL1:List, TIL2:List, B:AstBlock
+    )) =>
+    TypeFunction(getTypedIdentifierListTypeTuple(TIL1), getTypedIdentifierListTypeTuple(TIL2))
+
+  /**
+   * getTypedIdentifierListTypeTuple
+   */
+
   syntax TypeTuple ::=
-    getTypeTupleTypedIdentifierList(List) [function] |
+    getTypedIdentifierListTypeTuple(List) [function] |
     mergeTypeTuples(TypeTuple, TypeTuple) [function]
 
   rule
-    <k>
-      checkTypeProgram(B:AstBlock) =>
-      checkTypeBlock(B)
-      ...
-    </k>
+    getTypedIdentifierListTypeTuple(.List) =>
+    getEmptyTypeTuple()
+  
+  rule
+    getTypedIdentifierListTypeTuple(ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
+    mergeTypeTuples(TypeTuple(1, ListItem(TN)), getTypedIdentifierListTypeTuple(TIL))
 
   rule
-    <k>
-      checkTypeBlock(`AstBlock`(SS:List)) =>
-      checkTypeStatementSequence(SS)
-      ...
-    </k>
+    mergeTypeTuples(TypeTuple(I1:Int, L1:List), TypeTuple(I2:Int, L2:List)) =>
+    TypeTuple(I1 +Int I2, L1 L2)
+
+  /**
+   * TypeCheckEnvironment
+   */
+
+  syntax TypeCheckEnvironment ::=
+    TypeCheckEnvironment(List, List)
+
+  syntax TypeCheckEnvironment ::=
+    getEmptyTypeCheckEnvironment() [function]
+
+  rule getEmptyTypeCheckEnvironment()
+    => TypeCheckEnvironment(.List, .List)
+
+  /**
+   * TypeCheckResult
+   */
+
+  syntax TypeCheckResult ::=
+    TypeCheckResultError(String) |
+    TypeCheckResultSuccess(TypeCheckEnvironment)
+
+  /**
+   * typecheckProgram
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckProgram(AstProgram, TypeCheckEnvironment) [function]
 
   rule
-    <k>
-      checkTypeStatementSequence(SS:List) =>
-      (
-        checkTypeStatementSequenceFirstPass(SS) ~>
-        checkTypeStatementSequenceSecondPass(SS)
-      )
-      ...
-    </k>
+    typecheckProgram(B:AstBlock, E:TypeCheckEnvironment) =>
+    typecheckBlock(B, E)
+
+  /**
+   * typecheckBlock
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckBlock(AstBlock, TypeCheckEnvironment) [function] |
+    typecheckBlockStatementSequenceResult(TypeCheckResult) [function]
 
   rule
-    <k>
-      checkTypeStatementSequenceFirstPass(.List) =>
-      .
-      ...
-    </k>
+    typecheckBlock(`AstBlock`(SS:List), E:TypeCheckEnvironment) =>
+    typecheckBlockStatementSequenceResult(typecheckStatementSequence(SS, pushScope(E)))
 
   rule
-    <k>
-      checkTypeStatementSequenceFirstPass(ListItem(FD:AstFunctionDefinition) SS:List) =>
-      (
-        updateEnvironmentFunctionDefinition(FD) ~>
-        checkTypeStatementSequenceFirstPass(SS)
-      )
-      ...
-    </k>
+    typecheckBlockStatementSequenceResult(TypeCheckResultError(S:String)) =>
+    TypeCheckResultError(S)
 
   rule
-    <k>
-      updateEnvironmentFunctionDefinition(FD:AstFunctionDefinition) =>
-      .
-      ...
-    </k>
-    <cSignature>
-      ...
-      .Map => (
-        getNameFunctionDefinition(FD) |-> getTypeFunctionDefinition(FD)
-      )
-    </cSignature>
+    typecheckBlockStatementSequenceResult(TypeCheckResultSuccess(E:TypeCheckEnvironment)) =>
+    TypeCheckResultSuccess(popScope(E))
+
+  /**
+   * typecheckStatementSequence
+   */
+  syntax TypeCheckResult ::=
+    typecheckStatementSequence(List, TypeCheckEnvironment) [function] |
+    typecheckStatementSequenceFirstPass(List, TypeCheckEnvironment) [function] |
+    typecheckStatementSequenceFirstPassResult(TypeCheckResult, List) [function] |
+    typecheckStatementSequenceSecondPass(List, TypeCheckEnvironment) [function] |
+    typecheckStatementSequenceSecondPassResult(TypeCheckResult) [function] |
+    typecheckStatementSequenceStatementResult(TypeCheckResult, List) [function]
 
   rule
-    <k>
-      checkTypeStatementSequenceFirstPass(ListItem(S:AstStatement) SS:List) =>
-      checkTypeStatementSequenceFirstPass(SS)
-      ...
-    </k>
+    typecheckStatementSequence(SS:List, E:TypeCheckEnvironment) =>
+    typecheckStatementSequenceFirstPassResult(typecheckStatementSequenceFirstPass(SS, E), SS)
+
+  rule
+    typecheckStatementSequenceFirstPass(.List, E:TypeCheckEnvironment) =>
+    TypeCheckResultSuccess(E, .Type)
+
+  rule
+    typecheckStatementSequenceFirstPass(
+      ListItem(S:AstStatement) SS:List,
+      E:TypeCheckEnvironment
+    ) =>
+    typecheckStatementSequenceFirstPass(SS, E)
     requires notBool(isAstFunctionDefinition(S))
 
   rule
-    <k>
-      checkTypeStatementSequenceSecondPass(.List) =>
-      .
-      ...
-    </k>
-
-  rule
-    <k>
-      checkTypeStatementSequenceSecondPass(ListItem(S:AstStatement) SS:List) =>
-      (
-        checkTypeStatement(S) ~>
-        checkTypeStatementSequenceSecondPass(SS)
+    typecheckStatementSequenceFirstPass(
+      ListItem(FD:AstFunctionDefinition) SS:List,
+      E:TypeCheckEnvironment
+    ) =>
+    typecheckStatementSequenceFirstPass(
+      SS,
+      declareFunction(
+        getFunctionDefinitionName(FD),
+        getFunctionDefinitionType(FD),
+        E
       )
-      ...
-    </k>
+    )
+    requires lookupFunction(getFunctionDefinitionName(FD), E) ==K .List
 
   rule
-    <k>
-      checkTypeStatement(FD:AstFunctionDefinition) =>
-      .
-      ...
-    </k>
-
-  syntax KItem ::=
-    checkNotDefinedTypedIdentifierList(List) |
-    updateEnvironmentTypedIdentifierList(List)
+    typecheckStatementSequenceFirstPass(
+      ListItem(FD:AstFunctionDefinition) SS:List,
+      E:TypeCheckEnvironment
+    ) =>
+    TypeCheckResultError("Function is already defined.")
+    requires lookupFunction(getFunctionDefinitionName(FD), E) =/=K .List
 
   rule
-    <k>
-      checkTypeStatement(`AstVariableDeclaration1`(TIL:List)) =>
-      updateEnvironmentTypedIdentifierList(TIL)
-      ...
-    </k>
+    typecheckStatementSequenceFirstPassResult(TypeCheckResultError(S:String), SS:List) =>
+    TypeCheckResultError(S)
 
   rule
-    <k>
-      updateEnvironmentTypedIdentifierList(.List) =>
-      .
-      ...
-    </k>
+    typecheckStatementSequenceFirstPassResult(
+      TypeCheckResultSuccess(E:TypeCheckEnvironment),
+      SS:List
+    ) =>
+    typecheckStatementSequenceSecondPassResult(typecheckStatementSequenceSecondPass(SS, E))
 
   rule
-    <k>
-      updateEnvironmentTypedIdentifierList(ListItem(TI:AstTypedIdentifier) TIL:List) =>
-      updateEnvironmentTypedIdentifier(TI) ~> updateEnvironmentTypedIdentifierList(TIL)
-      ...
-    </k>
-
-  syntax KItem ::=
-    "#TypeCheckError" String
+    typecheckStatementSequenceSecondPass(.List, E:TypeCheckEnvironment) =>
+    TypeCheckResultSuccess(E)
 
   rule
-    <k>
-      checkNotDefinedTypedIdentifierList(.List) =>
-      .
-      ...
-    </k>
+    typecheckStatementSequenceSecondPass(
+      ListItem(S:AstStatement) SS:List,
+      E:TypeCheckEnvironment
+    ) =>
+    typecheckStatementSequenceStatementResult(typecheckStatement(S, E), SS)
 
   rule
-    <k>
-      checkNotDefinedTypedIdentifierList(ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
-      #TypeCheckError "Identifier is already defined."
-      ...
-    </k>
-    <cContext>
-      ...
-      I |-> T:Type
-      ...
-    </cContext>
+    typecheckStatementSequenceStatementResult(TypeCheckResultError(S:String), SS:List) =>
+    TypeCheckResultError(S)
 
   rule
-    <k>
-      checkNotDefinedTypedIdentifierList(ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
-      .
-      ...
-    </k>
-    <cContext>
-      C:Map
-    </cContext>
-    requires notBool(I in keys(C))
+    typecheckStatementSequenceStatementResult(
+      TypeCheckResultSuccess(E:TypeCheckEnvironment),
+      SS:List
+    ) =>
+    typecheckStatementSequenceSecondPass(SS, E)
+
+  rule
+    typecheckStatementSequenceSecondPassResult(TypeCheckResultError(S:String)) =>
+    TypeCheckResultError(S)
+
+  rule
+    typecheckStatementSequenceSecondPassResult(TypeCheckResultSuccess(E:TypeCheckEnvironment)) =>
+    TypeCheckResultSuccess(E)
+
+  /**
+   * typecheckStatement
+   */
+  syntax TypeCheckResult ::=
+    typecheckStatement(AstStatement, TypeCheckEnvironment) [function]
+
+  rule typecheckStatement(VD:AstVariableDeclaration, E:TypeCheckEnvironment)
+    => typecheckVariableDeclaration(VD, E)
+
+  /**
+   * typecheckVariableDeclaration
+   */
+  syntax TypeCheckResult ::=
+    typecheckVariableDeclaration(AstVariableDeclaration, TypeCheckEnvironment) [function] |
+    typecheckVariableDeclarationSinglePass(List, TypeCheckEnvironment) [function] |
+    typecheckVariableDeclarationResult(TypeCheckResult) [function]
+
+  rule
+    typecheckVariableDeclaration(`AstVariableDeclaration1`(TIL:List), E:TypeCheckEnvironment) =>
+    typecheckVariableDeclarationResult(typecheckVariableDeclarationSinglePass(TIL, E))
+
+  rule
+    typecheckVariableDeclaration(
+      `AstVariableDeclaration2`(TIL:List, Ex:AstExpression),
+      En:TypeCheckEnvironment
+    ) =>
+    typecheckVariableDeclarationExpressionResult(typecheckExpression(Ex, En))
+
+  rule
+    typecheckVariableDeclarationExpressionResult(TypeCheckResultError(S:String))
+    => TypeCheckResultError(S)
+
+  rule
+    typecheckVariableDeclarationExpressionResult(
+      TypeCheckResultSuccess(E:TypeCheckEnvironment)
+    )
+    => TypeCheckResultSuccess(E, .Type)
+
+  rule
+    typecheckVariableDeclarationSinglePass(.List, E:TypeCheckEnvironment) =>
+    TypeCheckResultSuccess(E, .Type)
+
+  rule
+    typecheckVariableDeclarationSinglePass(
+      ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List,
+      E:TypeCheckEnvironment
+    ) =>
+    TypeCheckResultError("Variable is already defined.")
+    requires lookupVariable(I, E) =/=K .List
+
+  rule
+    typecheckVariableDeclarationSinglePass(
+      ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List,
+      E:TypeCheckEnvironment
+    )
+    => typecheckVariableDeclarationSinglePass(TIL, declareVariable(I, TN, E))
+    requires lookupVariable(I, E) ==K .List
+
+  rule
+    typecheckVariableDeclarationResult(TypeCheckResultError(S:String))
+    => TypeCheckResultError(S)
+
+  rule
+    typecheckVariableDeclarationResult(TypeCheckResultSuccess(E:TypeCheckEnvironment))
+    => TypeCheckResultSuccess(E, .Type)
+
+  /**
+   * declareVariable
+   */
+
+  syntax TypeCheckEnvironment ::=
+    declareVariable(Identifier, Type, TypeCheckEnvironment) [function]
+
+  rule declareVariable(I:Identifier, T:Type, TypeCheckEnvironment(ListItem(VM:Map) VMS:List, FMS:List))
+    => TypeCheckEnvironment(ListItem(updateMap(VM, I |-> T)) VMS, FMS)
+
+  /**
+   * declareFunction
+   */
+
+  syntax TypeCheckEnvironment ::=
+    declareFunction(Identifier, Type, TypeCheckEnvironment) [function]
+
+  rule declareFunction(I:Identifier, T:Type, TypeCheckEnvironment(VMS:List, ListItem(FM:Map) FMS:List))
+    => TypeCheckEnvironment(VMS, ListItem(updateMap(FM, I |-> T)) FMS)
+
+  /**
+   * lookupVariable
+   */
+
+  syntax List ::=
+    lookupVariable(Identifier, TypeCheckEnvironment) [function]
+
+  rule lookupVariable(I:Identifier, TypeCheckEnvironment(.List, FMS:List))
+    => .List
+
+  rule lookupVariable(I:Identifier, TypeCheckEnvironment(ListItem(VM:Map) VMS:List, FMS:List))
+    => lookupVariable(I, TypeCheckEnvironment(VMS, FMS))
+    requires notBool(I in keys(VM))
+
+  rule lookupVariable(I:Identifier, TypeCheckEnvironment(ListItem(VM:Map) VMS:List, FMS:List))
+    => ListItem(VM[I])
+    requires I in keys(VM)
+
+  /**
+   * lookupFunction
+   */
+
+  syntax List ::=
+    lookupFunction(Identifier, TypeCheckEnvironment) [function]
+
+  rule lookupFunction(I:Identifier, TypeCheckEnvironment(VMS:List, .List))
+    => .List
+
+  rule lookupFunction(I:Identifier, TypeCheckEnvironment(VMS:List, ListItem(FM:Map) FMS:List))
+    => lookupFunction(I, TypeCheckEnvironment(VMS, FMS))
+    requires notBool(I in keys(FM))
+
+  rule lookupFunction(I:Identifier, TypeCheckEnvironment(VMS:List, ListItem(FM:Map) FMS:List))
+    => ListItem(FM[I])
+    requires I in keys(FM)
+
+  /**
+   * popScope
+   */
+
+  syntax TypeCheckEnvironment ::=
+    popScope(TypeCheckEnvironment) [function]
+
+  rule popScope(TypeCheckEnvironment(ListItem(_:Map) VMS:List, ListItem(_:Map) FMS:List))
+    => TypeCheckEnvironment(VMS, FMS)
+
+  /**
+   * pushScope
+   */
+
+  syntax TypeCheckEnvironment ::=
+    pushScope(TypeCheckEnvironment) [function]
+
+  rule pushScope(TypeCheckEnvironment(VMS:List, FMS:List))
+    => TypeCheckEnvironment(ListItem(.Map) VMS, ListItem(.Map) FMS)
+
+  // rule typecheckProgram(O:AstObject, E:TypeCheckEnvironment)
+  //   => TypeCheckResultSuccess(E, .Type)
+
+  
+  // syntax KItem ::=
+  //   checkNotDefinedTypedIdentifier(AstTypedIdentifier) |
+  //   checkTypeBlock(AstBlock) |
+  //   checkTypeExpression(AstExpression, Type) |
+  //   checkTypeExpressionCool(AstExpression, Type) |
+  //   checkTypeProgram(AstProgram) |
+  //   checkTypeStatement(AstStatement) |
+  //   checkTypeStatementSequence(List) |
+  //   checkTypeStatementSequenceFirstPass(List) |
+  //   checkTypeStatementSequenceSecondPass(List) |
+  //   checkTypeTypedIdentifierList(List) |
+  //   inferTypeExpression(AstExpression) |
+  //   updateEnvironmentFunctionDefinition(AstStatement) |
+  //   updateEnvironmentTypedIdentifier(AstTypedIdentifier)
+
+  
+  // rule
+  //   typecheckProgram(B:AstBlock, E:Environment) =>
+  //   typecheckBlock(B, E)
+  
+  // rule
+  //   typecheckBlock(`AstBlock`(SS:List), E:Environment) =>
+  //   typecheckStatementSequence(SS, addFunctions(SS, E))
+
+  // rule
+  //   typecheckStatementSequence(.List, E) =>
+  //   OK(E)
+
+  // rule
+  //   typecheckStatementSequence(ListItem(S) SS, E) =>
+  //   typecheckStatementSequence'(typecheckStatement(S, E), SS)
+
+  // rule
+  //   typecheckStatementSequence'(Error, SS) =>
+  //   Error
+
+  // rule
+  //   typecheckStatementSequence'(OK(E), SS) =>
+  //   typecheckStatementSequence(SS, E)
+
+  // syntax KItem ::=
+  //   "#TypeCheckError" String
 
   // rule
   //   <k>
-  //     updateEnvironment(`AstVariableDeclaration1`(.List)) =>
+  //     #TypeCheckError S:String ~> _:K =>
+  //     .
+  //   </k>
+  //   <cStdout> ... .List => ListItem(S) </cStdout>
+
+  
+  
+  // rule
+  //   <k>
+  //     checkTypeProgram(B:AstBlock) =>
+  //     checkTypeBlock(B)
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeBlock(`AstBlock`(SS:List)) =>
+  //     checkTypeStatementSequence(SS)
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatementSequence(SS:List) =>
+  //     (
+  //       checkTypeStatementSequenceFirstPass(SS) ~>
+  //       checkTypeStatementSequenceSecondPass(SS)
+  //     )
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatementSequenceFirstPass(.List) =>
   //     .
   //     ...
   //   </k>
 
   // rule
   //   <k>
-  //     updateEnvironment(ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
+  //     checkTypeStatementSequenceFirstPass(ListItem(S:AstStatement) SS:List) =>
+  //     checkTypeStatementSequenceFirstPass(SS)
+  //     ...
+  //   </k>
+  //   requires notBool(isAstFunctionDefinition(S))
+
+  // rule
+  //   <k>
+  //     checkTypeStatementSequenceFirstPass(ListItem(FD:AstFunctionDefinition) SS:List) =>
+  //     (
+  //       updateEnvironmentFunctionDefinition(FD) ~>
+  //       checkTypeStatementSequenceFirstPass(SS)
+  //     )
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     updateEnvironmentFunctionDefinition(FD:AstFunctionDefinition) =>
+  //     .
+  //     ...
+  //   </k>
+  //   <cSignature>
+  //     ...
+  //     (
+  //       .Map =>
+  //       getFunctionDefinitionName(FD) |-> getFunctionDefinitionType(FD)
+  //     )
+  //   </cSignature>
+
+  // rule
+  //   <k>
+  //     checkTypeStatementSequenceSecondPass(.List) =>
+  //     .
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatementSequenceSecondPass(ListItem(S:AstStatement) SS:List) =>
+  //     (
+  //       checkTypeStatement(S) ~>
+  //       checkTypeStatementSequenceSecondPass(SS)
+  //     )
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatement(FD:AstFunctionDefinition) =>
+  //     .
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatement(`AstVariableDeclaration1`(TIL:List)) =>
+  //     checkTypeTypedIdentifierList(TIL)
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeStatement(`AstVariableDeclaration2`(TIL:List, E:AstExpression)) =>
+  //     (
+  //       checkTypeExpression(E, getTypedIdentifierListTypeTuple(TIL)) ~>
+  //       checkTypeTypedIdentifierList(TIL)
+  //     )
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeTypedIdentifierList(.List) =>
+  //     .
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkTypeTypedIdentifierList(ListItem(TI:AstTypedIdentifier) TIL:List) =>
+  //     (
+  //       checkNotDefinedTypedIdentifier(TI) ~>
+  //       updateEnvironmentTypedIdentifier(TI) ~>
+  //       checkTypeTypedIdentifierList(TIL)
+  //     )
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     checkNotDefinedTypedIdentifier(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) =>
+  //     #TypeCheckError "Identifier is already defined.\n"
+  //     ...
+  //   </k>
+  //   <cContext>
+  //     C:Map
+  //   </cContext>
+  //   requires I in keys(C)
+
+  // rule
+  //   <k>
+  //     checkNotDefinedTypedIdentifier(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) =>
+  //     .
+  //     ...
+  //   </k>
+  //   <cContext>
+  //     C:Map
+  //   </cContext>
+  //   requires notBool(I in keys(C))
+
+  // rule
+  //   <k>
+  //     updateEnvironmentTypedIdentifier(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) =>
   //     .
   //     ...
   //   </k>
   //   <cContext>
   //     ...
-  //     .Map => (
+  //     (
+  //       .Map =>
   //       I |-> TN
   //     )
   //   </cContext>
 
   // rule
   //   <k>
-  //     updateEnvironment(S:AstStatement) =>
+  //     checkTypeExpression(E:AstExpression, T:Type) =>
+  //     inferTypeExpression(E) ~> checkTypeExpressionCool(E, T)
+  //     ...
+  //   </k>
+
+  // rule
+  //   <k>
+  //     T1:Type ~> checkTypeExpressionCool(E:AstExpression, T2:Type) =>
   //     .
   //     ...
   //   </k>
-  //   requires notBool (
-  //     isAstFunctionDefinition(S) orBool
-  //     isAstVariableDeclaration(S)
-  //   )
+  //   requires T1 ==K T2
 
-  syntax Type ::=
-    TypeFunction |
-    TypeName |
-    TypeTuple
+  // rule
+  //   <k>
+  //     T1:Type ~> checkTypeExpressionCool(E:AstExpression, T2:Type) =>
+  //     #TypeCheckError "Expression has wrong type.\n"
+  //     ...
+  //   </k>
+  //   requires T1 =/=K T2
 
-  syntax TypeFunction ::=
-    "#TypeFunction" TypeTuple TypeTuple
+  // rule
+  //   <k>
+  //     inferTypeExpression(`AstTypedLiteral`(_:Literal, TN:TypeName)) =>
+  //     #TypeTuple 1 ListItem(TN)
+  //     ...
+  //   </k>
 
-  syntax TypeTuple ::=
-    "#TypeTuple" Int List
+  // rule
+  //   <k>
+  //     inferTypeExpression(I:Identifier) =>
+  //     #TypeTuple 1 ListItem(T)
+  //     ...
+  //   </k>
+  //   <cContext>
+  //     ...
+  //     I |-> T:Type
+  //     ...
+  //   </cContext>
 
-  rule
-    getNameFunctionDefinition(`AstFunctionDefinition`(
-      I:Identifier, TIL1:List, TIL2:List, B:AstBlock
-    )) =>
-    I
-
-  rule
-    getTypeFunctionDefinition(`AstFunctionDefinition`(
-      I:Identifier, TIL1:List, TIL2:List, B:AstBlock
-    )) =>
-    #TypeFunction getTypeTupleTypedIdentifierList(TIL1) getTypeTupleTypedIdentifierList(TIL2)
-
-  rule
-    getTypeTupleTypedIdentifierList(.List) =>
-    #TypeTuple 0 .List
+  // rule
+  //   <k>
+  //     inferTypeExpression(I:Identifier) =>
+  //     #TypeCheckError "Identifier is undefined.\n"
+  //     ...
+  //   </k>
+  //   <cContext>
+  //     C:Map
+  //   </cContext>
+  //   requires notBool(I in keys(C))
   
-  rule
-    getTypeTupleTypedIdentifierList(ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List) =>
-    mergeTypeTuples(#TypeTuple 1 ListItem(TN), getTypeTupleTypedIdentifierList(TIL))
-
-  rule
-    mergeTypeTuples(#TypeTuple I1:Int L1:List, #TypeTuple I2:Int L2:List) =>
-    #TypeTuple (I1 +Int I2) (L1 L2)
-
-  // rule
-  //   <k>
-  //     checkTypeStatementSequence2(.List) =>
-  //     .
-  //     ...
-  //   </k>
-
-  // rule
-  //   <k>
-  //     checkTypeStatementSequence2(ListItem(S:AstStatement) SS:List) =>
-  //     checkTypeStatement(S)
-  //     checkTypeStatementSequence2(SS)
-  //     ...
-  //   </k>
-
   // syntax KItem ::=
   //   "#TypeCheck" Program |
   //   "#TypeCheck" Assignment |
@@ -352,13 +730,7 @@ module YUL-TYPE-CHECK
   //   "#TypeCheckError" String |
   //   "#TypeCheckSuccess" Type
 
-  rule
-    <k>
-      #TypeCheckError S:String ~> _:K =>
-      .
-    </k>
-    <cStdout> ... .List => ListItem(S) </cStdout>
-
+  
   // rule
   //   <k>
   //     P:Program =>
