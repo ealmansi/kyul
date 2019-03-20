@@ -151,7 +151,7 @@ module YUL-AST
     #AstFor toAstBlock(B1) toAstExpression(E) toAstBlock(B2) toAstBlock(B3)
 
   syntax AstFunctionCall ::=
-    "#AstFunctionCall" Identifier List |
+    "#AstFunctionCall" Identifier List [klabel(AstFunctionCall)] |
     toAstFunctionCall(FunctionCall) [function]
 
   rule
