@@ -14,6 +14,8 @@ module YUL
   imports YUL-AST
   imports YUL-TYPE-CHECK
 
-  rule P:Program => typecheckProgram(toAstProgram(P), getEmptyTypeCheckEnvironment())
+  rule
+    P:Program =>
+    typecheckProgram(toAstProgram(P), getEmptyTypeCheckEnvironment())
 
 endmodule
