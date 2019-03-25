@@ -105,6 +105,17 @@ module YUL-TYPE-CHECK
     TypeCheckResultSuccess(popScope(TCE))
 
   /**
+   * typecheckCode
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckCode(AstCode, TypeCheckEnvironment) [function]
+
+  rule
+    typecheckCode(`AstCode`(B:AstBlock), TCE:TypeCheckEnvironment) =>
+    typecheckBlock(B, TCE)
+
+  /**
    * typecheckDebug
    */
 
@@ -341,6 +352,74 @@ module YUL-TYPE-CHECK
     typecheckBlock(B, TCE)
 
   /**
+   * typecheckObject
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckObject(AstObject, TypeCheckEnvironment) [function] |
+    typecheckObjectCodeResult(TypeCheckResult, List) [function]
+
+  rule
+    typecheckObject(
+      `AstObject`(_:LiteralString, C:AstCode, OODS:List),
+      TCE:TypeCheckEnvironment
+    ) =>
+    typecheckObjectCodeResult(typecheckCode(C, TCE), OODS)
+
+  rule
+    typecheckObjectCodeResult(TypeCheckResultError(S:String), _:List) =>
+    TypeCheckResultError(S)
+
+  rule
+    typecheckObjectCodeResult(TypeCheckResultSuccess(TCE:TypeCheckEnvironment), OODS:List) =>
+    typecheckObjectOrDataSequence(OODS, TCE)
+
+  /**
+   * typecheckObjectOrData
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckObjectOrData(AstObjectOrData, TypeCheckEnvironment) [function]
+
+  rule
+    typecheckObjectOrData(D:AstData, TCE:TypeCheckEnvironment) =>
+    TypeCheckResultSuccess(TCE)
+
+  rule
+    typecheckObjectOrData(O:AstObject, TCE:TypeCheckEnvironment) =>
+    typecheckObject(O, TCE)
+
+  /**
+   * typecheckObjectOrDataSequence
+   */
+
+  syntax TypeCheckResult ::=
+    typecheckObjectOrDataSequence(List, TypeCheckEnvironment) [function] |
+    typecheckObjectOrDataSequenceObjectOrDataResult(TypeCheckResult, List) [function]
+  
+  rule
+    typecheckObjectOrDataSequence(.List, TCE) =>
+    TypeCheckResultSuccess(TCE)
+
+  rule
+    typecheckObjectOrDataSequence(ListItem(OOD:AstObjectOrData) OODS:List, TCE) =>
+    typecheckObjectOrDataSequenceObjectOrDataResult(
+      typecheckObjectOrData(OOD, TCE),
+      OODS
+    )
+
+  rule
+    typecheckObjectOrDataSequenceObjectOrDataResult(TypeCheckResultError(S:String), _:List) =>
+    TypeCheckResultError(S)
+
+  rule
+    typecheckObjectOrDataSequenceObjectOrDataResult(
+      TypeCheckResultSuccess(TCE:TypeCheckEnvironment),
+      OODS:List
+    ) =>
+    typecheckObjectOrDataSequence(OODS, TCE)
+
+  /**
    * typecheckProgram
    */
 
@@ -349,7 +428,11 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckProgram(B:AstBlock, TCE:TypeCheckEnvironment) =>
-    typecheckBlock(B, TCE)
+    typecheckBlock(B, setBuiltInFunctions(TCE))
+
+  rule
+    typecheckProgram(O:AstObject, TCE:TypeCheckEnvironment) =>
+    typecheckObject(O, setBuiltInFunctions(TCE))
 
   /**
    * typecheckStatement
@@ -813,6 +896,19 @@ module YUL-TYPE-CHECK
       TypeCheckEnvironment(VES:List, ListItem(FE:Map) FES:List)
     ) =>
     TypeCheckEnvironment(VES, ListItem(updateMap(FE, I |-> FA)) FES)
+
+  /**
+   * setBuiltInFunctions
+   */
+
+  syntax TypeCheckEnvironment ::=
+    setBuiltInFunctions(TypeCheckEnvironment) [function]
+
+  rule
+    setBuiltInFunctions(TCE:TypeCheckEnvironment) =>
+    setBuiltInFunctions2(
+      TCE
+    )
 
   /**
    * lookupVariable
