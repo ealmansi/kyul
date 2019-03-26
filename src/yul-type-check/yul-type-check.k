@@ -65,7 +65,7 @@ module YUL-TYPE-CHECK
     ) [function]
 
   rule
-    typecheckAssignment(`AstAssignment`(IL:List, E:AstExpression), TCE:TypeCheckEnvironment) =>
+    typecheckAssignment(AstAssignment(IL:List, E:AstExpression), TCE:TypeCheckEnvironment) =>
     typecheckAssignmentIdentifierListResult(inferTypeIdentifierList(IL, TCE), E, TCE)
 
   rule
@@ -93,7 +93,7 @@ module YUL-TYPE-CHECK
     typecheckBlockStatementSequenceResult(TypeCheckResult) [function]
 
   rule
-    typecheckBlock(`AstBlock`(SS:List), TCE:TypeCheckEnvironment) =>
+    typecheckBlock(AstBlock(SS:List), TCE:TypeCheckEnvironment) =>
     typecheckBlockStatementSequenceResult(typecheckStatementSequence(SS, pushScope(TCE)))
 
   rule
@@ -112,7 +112,7 @@ module YUL-TYPE-CHECK
     typecheckCode(AstCode, TypeCheckEnvironment) [function]
 
   rule
-    typecheckCode(`AstCode`(B:AstBlock), TCE:TypeCheckEnvironment) =>
+    typecheckCode(AstCode(B:AstBlock), TCE:TypeCheckEnvironment) =>
     typecheckBlock(B, TCE)
 
   /**
@@ -124,7 +124,7 @@ module YUL-TYPE-CHECK
     typecheckDebugExpressionResult(TypeInferenceResult, TypeCheckEnvironment) [function]
 
   rule
-    typecheckDebug(`AstDebug`(I:Identifier), TCE) =>
+    typecheckDebug(AstDebug(I:Identifier), TCE) =>
     typecheckDebugExpressionResult(inferTypeExpression(I, TCE), TCE)
 
   rule
@@ -191,23 +191,23 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckFor(
-      `AstFor`(B1:AstBlock, E:AstExpression, B2:AstBlock, B3:AstBlock),
+      AstFor(B1:AstBlock, E:AstExpression, B2:AstBlock, B3:AstBlock),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckForBlocks(B1, E, B2, B3, TCE)
 
   rule
     typecheckForBlocks(
-      `AstBlock`(SS1:List),
+      AstBlock(SS1:List),
       E:AstExpression,
-      `AstBlock`(SS2:List),
-      `AstBlock`(SS3:List),
+      AstBlock(SS2:List),
+      AstBlock(SS3:List),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckForBlocksResults(
-      typecheckBlock(`AstBlock`(SS1 ListItem(`AstIf`(E, `AstBlock`(.List)))), TCE),
-      typecheckBlock(`AstBlock`(SS1 SS2), TCE),
-      typecheckBlock(`AstBlock`(SS1 SS3), TCE),
+      typecheckBlock(AstBlock(SS1 ListItem(AstIf(E, AstBlock(.List)))), TCE),
+      typecheckBlock(AstBlock(SS1 SS2), TCE),
+      typecheckBlock(AstBlock(SS1 SS3), TCE),
       TCE
     )
 
@@ -302,14 +302,14 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckFunctionDefinition(
-      `AstFunctionDefinition`(_:Identifier, TIL1:List, TIL2:List, B:AstBlock),
+      AstFunctionDefinition(_:Identifier, TIL1:List, TIL2:List, B:AstBlock),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckFunctionDefinitionResults(
       typecheckBlock(
-        `AstBlock`(
-          ListItem(`AstVariableDeclaration1`(TIL1))
-          ListItem(`AstVariableDeclaration1`(TIL2))
+        AstBlock(
+          ListItem(AstVariableDeclaration1(TIL1))
+          ListItem(AstVariableDeclaration1(TIL2))
           ListItem(B)
         ),
         pushScopeWithRestrictedVariableAccess(TCE)
@@ -337,11 +337,8 @@ module YUL-TYPE-CHECK
     typecheckIfExpressionResult(TypeCheckResult, AstBlock) [function]
 
   rule
-    typecheckIf(`AstIf`(E:AstExpression, B:AstBlock), TCE:TypeCheckEnvironment) =>
-    typecheckIfExpressionResult(
-      typecheckExpression(E, TypeTuple(1, ListItem(#token("bool", "TypeNameBuiltIn"))), TCE),
-      B
-    )
+    typecheckIf(AstIf(E:AstExpression, B:AstBlock), TCE:TypeCheckEnvironment) =>
+    typecheckIfExpressionResult(typecheckExpression(E, TypeTuple(1, ListItem(bool)), TCE), B)
 
   rule
     typecheckIfExpressionResult(TypeCheckResultError(S:String), B:AstBlock) =>
@@ -361,7 +358,7 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckObject(
-      `AstObject`(_:LiteralString, C:AstCode, OODS:List),
+      AstObject(_:LiteralString, C:AstCode, OODS:List),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckObjectCodeResult(typecheckCode(C, TCE), OODS)
@@ -424,15 +421,24 @@ module YUL-TYPE-CHECK
    */
 
   syntax TypeCheckResult ::=
-    typecheckProgram(AstProgram, TypeCheckEnvironment) [function]
+    typecheckProgram(AstProgram, TypeCheckEnvironment) [function] |
+    typecheckProgramResult(TypeCheckResult) [function]
 
   rule
     typecheckProgram(B:AstBlock, TCE:TypeCheckEnvironment) =>
-    typecheckBlock(B, setBuiltInFunctions(TCE))
+    typecheckProgramResult(typecheckBlock(B, setBuiltInFunctions(pushScope(TCE))))
 
   rule
     typecheckProgram(O:AstObject, TCE:TypeCheckEnvironment) =>
-    typecheckObject(O, setBuiltInFunctions(TCE))
+    typecheckProgramResult(typecheckObject(O, setBuiltInFunctions(pushScope(TCE))))
+
+  rule
+    typecheckProgramResult(TypeCheckResultError(S:String)) =>
+    TypeCheckResultError(S)
+
+  rule
+    typecheckProgramResult(TypeCheckResultSuccess(TCE:TypeCheckEnvironment)) =>
+    TypeCheckResultSuccess(popScope(TCE))
 
   /**
    * typecheckStatement
@@ -466,7 +472,7 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckStatement(E:AstExpression, TCE:TypeCheckEnvironment) =>
-    typecheckExpression(E, getEmptyTypeTuple(), TCE)
+    typecheckExpression(E, makeTypeTuple(), TCE)
 
   rule
     typecheckStatement(FD:AstFunctionDefinition, TCE:TypeCheckEnvironment) =>
@@ -602,12 +608,12 @@ module YUL-TYPE-CHECK
     ) [function]
 
   rule
-    typecheckSwitch(`AstSwitch1`(E:AstExpression, CS:List), TCE:TypeCheckEnvironment) =>
-    typecheckSwitch(`AstSwitch2`(E, CS, `AstDefault`(`AstBlock`(.List))), TCE)
+    typecheckSwitch(AstSwitch1(E:AstExpression, CS:List), TCE:TypeCheckEnvironment) =>
+    typecheckSwitch(AstSwitch2(E, CS, AstDefault(AstBlock(.List))), TCE)
 
   rule
     typecheckSwitch(
-      `AstSwitch2`(E:AstExpression, CS:List, D:AstDefault),
+      AstSwitch2(E:AstExpression, CS:List, D:AstDefault),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckSwitchExpressionResult(inferTypeExpression(E, TCE), CS, D, TCE)
@@ -636,7 +642,7 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckCaseSequence(
-      ListItem(`AstCase`(TL:AstTypedLiteral, B:AstBlock)) CS:List,
+      ListItem(AstCase(TL:AstTypedLiteral, B:AstBlock)) CS:List,
       T:Type,
       TCE:TypeCheckEnvironment
     ) =>
@@ -689,7 +695,7 @@ module YUL-TYPE-CHECK
   rule
     typecheckSwitchCaseSequenceResult(
       TypeCheckResultSuccess(_:TypeCheckEnvironment),
-      `AstDefault`(B:AstBlock),
+      AstDefault(B:AstBlock),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckBlock(B, TCE)
@@ -704,12 +710,12 @@ module YUL-TYPE-CHECK
     typecheckVariableDeclarationSinglePass(List, TypeCheckEnvironment) [function]
 
   rule
-    typecheckVariableDeclaration(`AstVariableDeclaration1`(TIL:List), TCE:TypeCheckEnvironment) =>
+    typecheckVariableDeclaration(AstVariableDeclaration1(TIL:List), TCE:TypeCheckEnvironment) =>
     typecheckVariableDeclarationSinglePass(TIL, TCE)
 
   rule
     typecheckVariableDeclaration(
-      `AstVariableDeclaration2`(TIL:List, E:AstExpression),
+      AstVariableDeclaration2(TIL:List, E:AstExpression),
       TCE:TypeCheckEnvironment
     ) =>
     typecheckVariableDeclarationExpressionResult(
@@ -734,7 +740,7 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckVariableDeclarationSinglePass(
-      ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List,
+      ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List,
       TCE:TypeCheckEnvironment
     ) =>
     TypeCheckResultError("Variable is already defined.")
@@ -742,7 +748,7 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckVariableDeclarationSinglePass(
-      ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List,
+      ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List,
       TCE:TypeCheckEnvironment
     ) =>
     typecheckVariableDeclarationSinglePass(
@@ -794,11 +800,11 @@ module YUL-TYPE-CHECK
     TypeInferenceResultSuccess(TypeTuple(1, ListItem(T)))
 
   rule
-    inferTypeExpression(`AstTypedLiteral`(_:Literal, TN:TypeName), TCE:TypeCheckEnvironment) =>
+    inferTypeExpression(AstTypedLiteral(_:Literal, TN:TypeName), TCE:TypeCheckEnvironment) =>
     TypeInferenceResultSuccess(TypeTuple(1, ListItem(TN)))
 
   rule
-    inferTypeExpression(`AstFunctionCall`(I:Identifier, EL:List), TCE:TypeCheckEnvironment) =>
+    inferTypeExpression(AstFunctionCall(I:Identifier, EL:List), TCE:TypeCheckEnvironment) =>
     inferTypeExpressionFunctionLookupResult(lookupFunction(I, TCE), EL, TCE)
 
   rule
@@ -834,7 +840,7 @@ module YUL-TYPE-CHECK
 
   rule
     inferTypeIdentifierList(.List, _:TypeCheckEnvironment) =>
-    TypeInferenceResultSuccess(getEmptyTypeTuple())
+    TypeInferenceResultSuccess(makeTypeTuple())
 
   rule
     inferTypeIdentifierList(ListItem(I:Identifier) IL:List, TCE:TypeCheckEnvironment) =>
@@ -902,13 +908,329 @@ module YUL-TYPE-CHECK
    */
 
   syntax TypeCheckEnvironment ::=
-    setBuiltInFunctions(TypeCheckEnvironment) [function]
+    setBuiltInFunctions(TypeCheckEnvironment) [function] |
+    setBuiltInFunctions2(List, TypeCheckEnvironment) [function]
 
   rule
     setBuiltInFunctions(TCE:TypeCheckEnvironment) =>
     setBuiltInFunctions2(
+      makeBuiltInFunctionDescription(
+        and, makeTypeTuple(bool, bool), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        not, makeTypeTuple(bool), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        or, makeTypeTuple(bool, bool), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        xor, makeTypeTuple(bool, bool), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        addmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        addu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        andu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        byte, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        divs256, makeTypeTuple(s256, s256), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        divu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        equ256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        expu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        gts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        gtu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        iszerou256, makeTypeTuple(u256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        lts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        ltu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        mods256, makeTypeTuple(s256, s256), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        modu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        mulmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        mulu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        notu256, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        oru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        sars256, makeTypeTuple(s256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        shlu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        shru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        signextendu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        subu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        xoru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        mload, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        msize, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        mstore, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        mstore8, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        sload, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        sstore, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        abort, makeTypeTuple(), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        call, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        callcode, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        create, makeTypeTuple(u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        create2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        delegatecall, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        log0, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        log1, makeTypeTuple(u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        log2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        log3, makeTypeTuple(u256, u256, u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        log4, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        return, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        revert, makeTypeTuple(u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        selfdestruct, makeTypeTuple(u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        balance, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blockcoinbase, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blockdifficulty, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blockgaslimit, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blockhash, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blocknumber, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        blocktimestamp, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        calldatacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        calldataload, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        calldatasize, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        caller, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        callvalue, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        codecopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        codesize, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        extcodecopy, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        extcodehash, makeTypeTuple(u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        extcodesize, makeTypeTuple(u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        gasleft, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        this, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        txgasprice, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        txorigin, makeTypeTuple(), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        combineu64tou256, makeTypeTuple(u64, u64, u64, u64), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        datacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        discard, makeTypeTuple(bool), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        discardu256, makeTypeTuple(u256), makeTypeTuple()
+      )
+      makeBuiltInFunctionDescription(
+        keccak256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        splitu256tou64, makeTypeTuple(u256), makeTypeTuple(u64, u64, u64, u64)
+      )
+      makeBuiltInFunctionDescription(
+        booltos256, makeTypeTuple(bool), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        booltou256, makeTypeTuple(bool), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        booltou32, makeTypeTuple(bool), makeTypeTuple(u32)
+      )
+      makeBuiltInFunctionDescription(
+        booltou64, makeTypeTuple(bool), makeTypeTuple(u64)
+      )
+      makeBuiltInFunctionDescription(
+        s256tobool, makeTypeTuple(s256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        s256tou256, makeTypeTuple(s256), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        s256tou32, makeTypeTuple(s256), makeTypeTuple(u32)
+      )
+      makeBuiltInFunctionDescription(
+        s256tou64, makeTypeTuple(s256), makeTypeTuple(u64)
+      )
+      makeBuiltInFunctionDescription(
+        u256tobool, makeTypeTuple(u256), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        u256tos256, makeTypeTuple(u256), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        u256tou32, makeTypeTuple(u256), makeTypeTuple(u32)
+      )
+      makeBuiltInFunctionDescription(
+        u256tou64, makeTypeTuple(u256), makeTypeTuple(u64)
+      )
+      makeBuiltInFunctionDescription(
+        u32tobool, makeTypeTuple(u32), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        u32tos256, makeTypeTuple(u32), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        u32tou256, makeTypeTuple(u32), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        u32tou64, makeTypeTuple(u32), makeTypeTuple(u64)
+      )
+      makeBuiltInFunctionDescription(
+        u64tobool, makeTypeTuple(u64), makeTypeTuple(bool)
+      )
+      makeBuiltInFunctionDescription(
+        u64tos256, makeTypeTuple(u64), makeTypeTuple(s256)
+      )
+      makeBuiltInFunctionDescription(
+        u64tou256, makeTypeTuple(u64), makeTypeTuple(u256)
+      )
+      makeBuiltInFunctionDescription(
+        u64tou32, makeTypeTuple(u64), makeTypeTuple(u32)
+      ),
       TCE
     )
+
+  rule
+    setBuiltInFunctions2(.List, TCE:TypeCheckEnvironment) =>
+    TCE
+
+  rule
+    setBuiltInFunctions2(
+      ListItem(
+        BuiltInFunctionDescription(IBIF:IdentifierBuiltInFunction, T1:TypeTuple, T2:TypeTuple)
+      ) L:List,
+      TCE:TypeCheckEnvironment
+    ) =>
+    setBuiltInFunctions2(L, setFunction(IBIF, FunctionAttributes(TypeFunction(T1, T2)), TCE))
+
+  /**
+   * makeBuiltInFunctionDescription
+   */
+
+  syntax BuiltInFunctionDescription ::=
+    BuiltInFunctionDescription(IdentifierBuiltInFunction, TypeTuple, TypeTuple)
+
+  syntax List ::=
+    makeBuiltInFunctionDescription(IdentifierBuiltInFunction, TypeTuple, TypeTuple) [function]
+
+  rule
+    makeBuiltInFunctionDescription(IBIF:IdentifierBuiltInFunction, T1:TypeTuple, T2:TypeTuple) =>
+    ListItem(BuiltInFunctionDescription(IBIF, T1, T2))
 
   /**
    * lookupVariable
@@ -1046,7 +1368,7 @@ module YUL-TYPE-CHECK
 
   rule
     getFunctionDefinitionName(
-      `AstFunctionDefinition`(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
+      AstFunctionDefinition(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
     ) =>
     I
 
@@ -1059,20 +1381,59 @@ module YUL-TYPE-CHECK
 
   rule
     getFunctionDefinitionType(
-      `AstFunctionDefinition`(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
+      AstFunctionDefinition(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
     ) =>
     TypeFunction(getTypedIdentifierListTypeTuple(TIL1), getTypedIdentifierListTypeTuple(TIL2))
 
   /**
-   * getEmptyTypeTuple
+   * makeTypeTuple
    */
 
   syntax TypeTuple ::=
-    getEmptyTypeTuple() [function]
+    makeTypeTuple() [function] |
+    makeTypeTuple(Type) [function] |
+    makeTypeTuple(Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type, Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type, Type, Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type, Type, Type, Type, Type) [function] |
+    makeTypeTuple(Type, Type, Type, Type, Type, Type, Type, Type) [function]
 
   rule
-    getEmptyTypeTuple() =>
+    makeTypeTuple() =>
     TypeTuple(0, .List)
+
+  rule
+    makeTypeTuple(T1:Type) =>
+    TypeTuple(1, ListItem(T1))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type) =>
+    TypeTuple(2, ListItem(T1) ListItem(T2))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type, T3:Type) =>
+    TypeTuple(3, ListItem(T1) ListItem(T2) ListItem(T3))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type) =>
+    TypeTuple(4, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type) =>
+    TypeTuple(5, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type, T6:Type) =>
+    TypeTuple(6, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5) ListItem(T6))
+
+  rule
+    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type, T6:Type, T7:Type) =>
+    TypeTuple(
+      7,
+      ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5) ListItem(T6) ListItem(T7)
+    )
 
   /**
    * getTypedIdentifierListTypeTuple
@@ -1083,11 +1444,11 @@ module YUL-TYPE-CHECK
 
   rule
     getTypedIdentifierListTypeTuple(.List) =>
-    getEmptyTypeTuple()
+    makeTypeTuple()
 
   rule
     getTypedIdentifierListTypeTuple(
-      ListItem(`AstTypedIdentifier`(I:Identifier, TN:TypeName)) TIL:List
+      ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List
     ) =>
     mergeTypeTuples(TypeTuple(1, ListItem(TN)), getTypedIdentifierListTypeTuple(TIL))
 

@@ -76,7 +76,127 @@ module YUL-SYNTAX
       [klabel(FunctionDefinition4)]
 
   syntax Identifier ::=
-    Id
+    Id |
+    IdentifierBuiltInFunction
+
+  syntax IdentifierBuiltInFunction ::=
+    IdentifierBuiltInFunctionArithmetic |
+    IdentifierBuiltInFunctionExecutionControl |
+    IdentifierBuiltInFunctionLogic |
+    IdentifierBuiltInFunctionOther |
+    IdentifierBuiltInFunctionState |
+    IdentifierBuiltInFunctionStorage |
+    IdentifierBuiltInFunctionTypeConversion
+
+  syntax IdentifierBuiltInFunctionArithmetic ::=
+    "addmodu256" [token] |
+    "addu256" [token] |
+    "andu256" [token] |
+    "byte" [token] |
+    "divs256" [token] |
+    "divu256" [token] |
+    "equ256" [token] |
+    "expu256" [token] |
+    "gts256" [token] |
+    "gtu256" [token] |
+    "iszerou256" [token] |
+    "lts256" [token] |
+    "ltu256" [token] |
+    "mods256" [token] |
+    "modu256" [token] |
+    "mulmodu256" [token] |
+    "mulu256" [token] |
+    "notu256" [token] |
+    "oru256" [token] |
+    "sars256" [token] |
+    "shlu256" [token] |
+    "shru256" [token] |
+    "signextendu256" [token] |
+    "subu256" [token] |
+    "xoru256" [token]
+
+  syntax IdentifierBuiltInFunctionExecutionControl ::=
+    "abort" [token] |
+    "call" [token] |
+    "callcode" [token] |
+    "create" [token] |
+    "create2" [token] |
+    "delegatecall" [token] |
+    "log0" [token] |
+    "log1" [token] |
+    "log2" [token] |
+    "log3" [token] |
+    "log4" [token] |
+    "return" [token] |
+    "revert" [token] |
+    "selfdestruct" [token]
+
+  syntax IdentifierBuiltInFunctionLogic ::=
+    "and" [token] |
+    "not" [token] |
+    "or" [token] |
+    "xor" [token]
+
+  syntax IdentifierBuiltInFunctionOther ::=
+    "combineu64tou256" [token] |
+    "datacopy" [token] |
+    "discard" [token] |
+    "discardu256" [token] |
+    "keccak256" [token] |
+    "splitu256tou64" [token]
+
+  syntax IdentifierBuiltInFunctionState ::=
+    "balance" [token] |
+    "blockcoinbase" [token] |
+    "blockdifficulty" [token] |
+    "blockgaslimit" [token] |
+    "blockhash" [token] |
+    "blocknumber" [token] |
+    "blocktimestamp" [token] |
+    "calldatacopy" [token] |
+    "calldataload" [token] |
+    "calldatasize" [token] |
+    "caller" [token] |
+    "callvalue" [token] |
+    "codecopy" [token] |
+    "codesize" [token] |
+    "extcodecopy" [token] |
+    "extcodehash" [token] |
+    "extcodesize" [token] |
+    "gasleft" [token] |
+    "this" [token] |
+    "txgasprice" [token] |
+    "txorigin" [token]
+
+  syntax IdentifierBuiltInFunctionStorage ::=
+    "mload" [token] |
+    "msize" [token] |
+    "mstore" [token] |
+    "mstore8" [token] |
+    "sload" [token] |
+    "sstore" [token]
+
+  syntax IdentifierBuiltInFunctionTypeConversion ::=
+    "booltos256" [token] |
+    "booltou256" [token] |
+    "booltou32" [token] |
+    "booltou64" [token] |
+    "s256tobool" [token] |
+    "s256tou256" [token] |
+    "s256tou32" [token] |
+    "s256tou64" [token] |
+    "u256tobool" [token] |
+    "u256tos256" [token] |
+    "u256tou32" [token] |
+    "u256tou64" [token] |
+    "u32tobool" [token] |
+    "u32tos256" [token] |
+    "u32tou256" [token] |
+    "u32tou64" [token] |
+    "u64tobool" [token] |
+    "u64tos256" [token] |
+    "u64tou256" [token] |
+    "u64tou32" [token]
 
   syntax IdentifierList ::=
     Identifier |
