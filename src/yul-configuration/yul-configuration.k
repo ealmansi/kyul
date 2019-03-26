@@ -7,12 +7,14 @@ module YUL-CONFIGURATION
   configuration
     <T>
       <k> $PGM:Program </k>
-      <cSignature>
-        .Map
-      </cSignature>
-      <cContext>
-        .Map
-      </cContext>
+      <cTypeCheck>
+        <cTypeCheckVariableEnvironmentStack>
+          .List
+        </cTypeCheckVariableEnvironmentStack>
+        <cTypeCheckFunctionEnvironmentStack>
+          .List
+        </cTypeCheckFunctionEnvironmentStack>
+      </cTypeCheck>
       <cSymbolTableStack>
         <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
         <cSymbolTable multiplicity="*">

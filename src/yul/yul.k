@@ -16,6 +16,6 @@ module YUL
 
   rule
     P:Program =>
-    typecheckProgram(toAstProgram(P), getEmptyTypeCheckEnvironment())
+    typecheckProgram(toAstProgram(P))
 
 endmodule
