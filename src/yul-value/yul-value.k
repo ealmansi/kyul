@@ -7,96 +7,101 @@ module YUL-VALUE
   imports YUL-CONFIGURATION
 
   syntax Value ::=
-    "#ValueBool" Bool |
-    "#ValueU8" Int |
-    "#ValueU32" Int |
-    "#ValueU64" Int |
-    "#ValueU128" Int |
-    "#ValueU256" Int |
-    "#ValueS8" Int |
-    "#ValueS32" Int |
-    "#ValueS64" Int |
-    "#ValueS128" Int |
-    "#ValueS256" Int
+    ValueBool(Bool) |
+    ValueU8(Int) |
+    ValueU32(Int) |
+    ValueU64(Int) |
+    ValueU128(Int) |
+    ValueU256(Int) |
+    ValueS8(Int) |
+    ValueS32(Int) |
+    ValueS64(Int) |
+    ValueS128(Int) |
+    ValueS256(Int) |
+    ValueTuple
 
-  syntax KItem ::=
-    "#DefaultValue" TypeName
+  /**
+   * ValueTuple
+   */
 
-  rule
-    <k>
-      #DefaultValue bool =>
-      ListItem(#ValueBool false)
-      ...
-    </k>
+  syntax ValueTuple ::=
+    ValueTuple(Int, List)
 
-  rule
-    <k>
-      #DefaultValue u8 =>
-      ListItem(#ValueU8 0)
-      ...
-    </k>
+  /**
+   * makeValueTuple
+   */
 
-  rule
-    <k>
-      #DefaultValue u32 =>
-      ListItem(#ValueU32 0)
-      ...
-    </k>
+  syntax ValueTuple ::=
+    makeValueTuple() [function] |
+    makeValueTuple(Value) [function] |
+    makeValueTuple(Value, Value) [function] |
+    makeValueTuple(Value, Value, Value) [function]
 
   rule
-    <k>
-      #DefaultValue u64 =>
-      ListItem(#ValueU64 0)
-      ...
-    </k>
+    makeValueTuple() =>
+    ValueTuple(0, .List)
 
   rule
-    <k>
-      #DefaultValue u128 =>
-      ListItem(#ValueU128 0)
-      ...
-    </k>
+    makeValueTuple(V1:Value) =>
+    ValueTuple(1, ListItem(V1))
 
   rule
-    <k>
-      #DefaultValue u256 =>
-      ListItem(#ValueU256 0)
-      ...
-    </k>
+    makeValueTuple(V1:Value, V2:Value) =>
+    ValueTuple(2, ListItem(V1) ListItem(V2))
 
   rule
-    <k>
-      #DefaultValue s8 =>
-      ListItem(#ValueS8 0)
-      ...
-    </k>
+    makeValueTuple(V1:Value, V2:Value, V3:Value) =>
+    ValueTuple(3, ListItem(V1) ListItem(V2) ListItem(V3))
+
+  /**
+   * getDefaultValue
+   */
+
+  syntax Value ::=
+    getDefaultValue(TypeName) [function]
 
   rule
-    <k>
-      #DefaultValue s32 =>
-      ListItem(#ValueS32 0)
-      ...
-    </k>
+    getDefaultValue(bool) =>
+    ValueBool(false)
 
   rule
-    <k>
-      #DefaultValue s64 =>
-      ListItem(#ValueS64 0)
-      ...
-    </k>
+    getDefaultValue(u8) =>
+    ValueU8(0)
 
   rule
-    <k>
-      #DefaultValue s128 =>
-      ListItem(#ValueS128 0)
-      ...
-    </k>
+    getDefaultValue(u32) =>
+    ValueU32(0)
 
   rule
-    <k>
-      #DefaultValue s256 =>
-      ListItem(#ValueS256 0)
-      ...
-    </k>
+    getDefaultValue(u64) =>
+    ValueU64(0)
+
+  rule
+    getDefaultValue(u128) =>
+    ValueU128(0)
+
+  rule
+    getDefaultValue(u256) =>
+    ValueU256(0)
+
+  rule
+    getDefaultValue(s8) =>
+    ValueS8(0)
+
+  rule
+    getDefaultValue(s32) =>
+    ValueS32(0)
+
+  rule
+    getDefaultValue(s64) =>
+    ValueS64(0)
+
+  rule
+    getDefaultValue(s128) =>
+    ValueS128(0)
+
+  rule
+    getDefaultValue(s256) =>
+    ValueS256(0)
 
 endmodule

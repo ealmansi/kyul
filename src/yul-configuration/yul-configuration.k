@@ -11,6 +11,10 @@ module YUL-CONFIGURATION
         <cTypeCheckVariableEnvironmentStack> .List </cTypeCheckVariableEnvironmentStack>
         <cTypeCheckFunctionEnvironmentStack> .List </cTypeCheckFunctionEnvironmentStack>
       </cTypeCheck>
+      <cEvaluation>
+        <cEvaluationVariableEnvironmentStack> .List </cEvaluationVariableEnvironmentStack>
+        <cEvaluationFunctionEnvironmentStack> .List </cEvaluationFunctionEnvironmentStack>
+      </cEvaluation>
       // <cSymbolTableStack>
       //   <cSymbolTableStackSize> 0 </cSymbolTableStackSize>
       //   <cSymbolTable multiplicity="*">
