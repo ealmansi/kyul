@@ -1,8 +1,8 @@
-require "../../yul-configuration/yul-configuration.k"
-require "../../yul-semantics/yul-semantics.k"
-require "../../yul-syntax/yul-syntax.k"
-require "../../yul-utility/yul-utility.k"
-require "../../yul-value/yul-value.k"
+requires "../../yul-configuration/yul-configuration.k"
+requires "../../yul-semantics/yul-semantics.k"
+requires "../../yul-syntax/yul-syntax.k"
+requires "../../yul-utility/yul-utility.k"
+requires "../../yul-value/yul-value.k"
 
 module YUL-BUILT-IN-LOGIC
   imports DOMAINS

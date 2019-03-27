@@ -2,78 +2,37 @@ module YUL-SYNTAX
   imports DOMAINS-SYNTAX
   imports INT-SYNTAX
 
-  syntax Assignment ::=
-    IdentifierList ":=" Expression
-      [klabel(Assignment)]
+  syntax Program ::=
+    Block |
+    Object
 
   syntax Block ::=
-    "{" "}"
-      [klabel(Block1)] |
-    "{" StatementSequence "}"
-      [klabel(Block2)]
+    "{" "}" [klabel(Block1)] |
+    "{" StatementSequence "}" [klabel(Block2)]
 
-  syntax Break ::=
-    "break" [token]
+  syntax StatementSequence ::=
+    Statement |
+    StatementSequence Statement [klabel(StatementSequence)]
 
-  syntax Case ::=
-    "case" TypedLiteral Block
-      [klabel(Case)]
-
-  syntax CaseSequence ::=
-    Case |
-    CaseSequence Case
-      [klabel(CaseSequence)]
-
-  syntax Code ::=
-    "code" Block
-      [klabel(Code)]
-
-  syntax Continue ::=
-    "continue" [token]
-
-  syntax Data ::=
-    "data" LiteralString LiteralHex
-      [klabel(Data1)] |
-    "data" LiteralString LiteralString
-      [klabel(Data2)]
-
-  syntax Debug ::=
-    "#debug" Identifier
-      [klabel(Debug)]
-
-  syntax Default ::=
-    "default" Block
-      [klabel(Default)]
-
-  syntax Expression ::=
-    FunctionCall |
-    Identifier |
-    TypedLiteral
-
-  syntax ExpressionList ::=
+  syntax Statement ::=
+    Assignment |
+    Block |
+    Break |
+    Continue |
+    Debug |
     Expression |
-    ExpressionList "," Expression
-      [klabel(ExpressionList)]
+    For |
+    FunctionDefinition |
+    If |
+    Switch |
+    VariableDeclaration
 
-  syntax For ::=
-    "for" Block Expression Block Block
-      [klabel(For)]
+  syntax Assignment ::=
+    IdentifierList ":=" Expression [klabel(Assignment)]
 
-  syntax FunctionCall ::=
-    Identifier "(" ")"
-      [klabel(FunctionCall1)] |
-    Identifier "(" ExpressionList ")"
-      [klabel(FunctionCall2)]
-
-  syntax FunctionDefinition ::=
-    "function" Identifier "(" ")" Block
-      [klabel(FunctionDefinition1)] |
-    "function" Identifier "(" TypedIdentifierList ")" Block
-      [klabel(FunctionDefinition2)] |
-    "function" Identifier "(" ")" "->" TypedIdentifierList Block
-      [klabel(FunctionDefinition3)] |
-    "function" Identifier "(" TypedIdentifierList ")" "->" TypedIdentifierList Block
-      [klabel(FunctionDefinition4)]
+  syntax IdentifierList ::=
+    Identifier |
+    IdentifierList "," Identifier [klabel(IdentifierList)]
 
   syntax Identifier ::=
     Id |
@@ -198,14 +157,21 @@ module YUL-SYNTAX
     "u64tou256" [token] |
     "u64tou32" [token]
 
-  syntax IdentifierList ::=
+  syntax Expression ::=
+    FunctionCall |
     Identifier |
-    IdentifierList "," Identifier
-      [klabel(IdentifierList)]
+    TypedLiteral
 
-  syntax If ::=
-    "if" Expression Block
-      [klabel(If)]
+  syntax FunctionCall ::=
+    Identifier "(" ")" [klabel(FunctionCall1)] |
+    Identifier "(" ExpressionList ")" [klabel(FunctionCall2)]
+
+  syntax ExpressionList ::=
+    Expression |
+    ExpressionList "," Expression [klabel(ExpressionList)]
+
+  syntax TypedLiteral ::=
+    Literal ":" TypeName [klabel(TypedLiteral)]
 
   syntax Literal ::=
     LiteralBool |
@@ -239,64 +205,6 @@ module YUL-SYNTAX
   syntax LiteralString ::=
     String
 
-  syntax Object ::=
-    "object" LiteralString "{" Code "}"
-      [klabel(Object1)] |
-    "object" LiteralString "{" Code ObjectOrDataSequence "}"
-      [klabel(Object2)]
-
-  syntax ObjectOrData ::=
-    Data |
-    Object
-
-  syntax ObjectOrDataSequence ::=
-    ObjectOrData |
-    ObjectOrDataSequence ObjectOrData
-      [klabel(ObjectOrDataSequence)]
-
-  syntax Program ::=
-    Block |
-    Object
-
-  syntax Statement ::=
-    Assignment |
-    Block |
-    Break |
-    Continue |
-    Debug |
-    Expression |
-    For |
-    FunctionDefinition |
-    If |
-    Switch |
-    VariableDeclaration
-
-  syntax StatementSequence ::=
-    Statement |
-    StatementSequence Statement
-      [klabel(StatementSequence)]
-
-  syntax Switch ::=
-    "switch" Expression CaseSequence
-      [klabel(Switch1)] |
-    "switch" Expression CaseSequence Default
-      [klabel(Switch2)] |
-    "switch" Expression Default
-      [klabel(Switch3)]
-
-  syntax TypedIdentifier ::=
-    Identifier ":" TypeName
-      [klabel(TypedIdentifier)]
-
-  syntax TypedIdentifierList ::=
-    TypedIdentifier |
-    TypedIdentifierList "," TypedIdentifier
-      [klabel(TypedIdentifierList)]
-
-  syntax TypedLiteral ::=
-    Literal ":" TypeName
-      [klabel(TypedLiteral)]
-
   syntax TypeName ::=
     Identifier |
     TypeNameBuiltIn
@@ -314,10 +222,71 @@ module YUL-SYNTAX
     "s128" [token] |
     "s256" [token]
 
+  syntax Break ::=
+    "break" [token]
+
+  syntax Continue ::=
+    "continue" [token]
+
+  syntax Debug ::=
+    "#debug" Identifier [klabel(Debug)]
+
+  syntax For ::=
+    "for" Block Expression Block Block [klabel(For)]
+
+  syntax FunctionDefinition ::=
+    "function" Identifier "(" ")" Block [klabel(FunctionDefinition1)] |
+    "function" Identifier "(" TypedIdentifierList ")" Block [klabel(FunctionDefinition2)] |
+    "function" Identifier "(" ")" "->" TypedIdentifierList Block [klabel(FunctionDefinition3)] |
+    "function" Identifier "(" TypedIdentifierList ")" "->" TypedIdentifierList Block
+      [klabel(FunctionDefinition4)]
+
+  syntax TypedIdentifierList ::=
+    TypedIdentifier |
+    TypedIdentifierList "," TypedIdentifier [klabel(TypedIdentifierList)]
+
+  syntax TypedIdentifier ::=
+    Identifier ":" TypeName [klabel(TypedIdentifier)]
+
+  syntax If ::=
+    "if" Expression Block [klabel(If)]
+
+  syntax Switch ::=
+    "switch" Expression CaseSequence [klabel(Switch1)] |
+    "switch" Expression CaseSequence Default [klabel(Switch2)] |
+    "switch" Expression Default [klabel(Switch3)]
+
+  syntax CaseSequence ::=
+    Case |
+    CaseSequence Case [klabel(CaseSequence)]
+
+  syntax Case ::=
+    "case" TypedLiteral Block [klabel(Case)]
+
+  syntax Default ::=
+    "default" Block [klabel(Default)]
+
   syntax VariableDeclaration ::=
-    "let" TypedIdentifierList
-      [klabel(VariableDeclaration1)] |
-    "let" TypedIdentifierList ":=" Expression
-      [klabel(VariableDeclaration2)]
+    "let" TypedIdentifierList [klabel(VariableDeclaration1)] |
+    "let" TypedIdentifierList ":=" Expression [klabel(VariableDeclaration2)]
+
+  syntax Object ::=
+    "object" LiteralString "{" Code "}" [klabel(Object1)] |
+    "object" LiteralString "{" Code ObjectOrDataSequence "}" [klabel(Object2)]
+
+  syntax Code ::=
+    "code" Block [klabel(Code)]
+
+  syntax ObjectOrDataSequence ::=
+    ObjectOrData |
+    ObjectOrDataSequence ObjectOrData [klabel(ObjectOrDataSequence)]
+
+  syntax ObjectOrData ::=
+    Data |
+    Object
+
+  syntax Data ::=
+    "data" LiteralString LiteralHex [klabel(Data1)] |
+    "data" LiteralString LiteralString [klabel(Data2)]
 
 endmodule

@@ -1,5 +1,5 @@
-require "../yul-syntax/yul-syntax.k"
-require "../yul-configuration/yul-configuration.k"
+requires "../yul-syntax/yul-syntax.k"
+requires "../yul-configuration/yul-configuration.k"
 
 module YUL-VALUE
   imports DOMAINS

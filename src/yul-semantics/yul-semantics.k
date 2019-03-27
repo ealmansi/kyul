@@ -1,7 +1,9 @@
-require "../yul-configuration/yul-configuration.k"
-require "../yul-syntax/yul-syntax.k"
-require "../yul-utility/yul-utility.k"
-require "../yul-value/yul-value.k"
+/* lint:disable */
+
+requires "../yul-configuration/yul-configuration.k"
+requires "../yul-syntax/yul-syntax.k"
+requires "../yul-utility/yul-utility.k"
+requires "../yul-value/yul-value.k"
 
 module YUL-SEMANTICS
   imports DOMAINS

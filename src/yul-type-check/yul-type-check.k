@@ -1,76 +1,58 @@
-require "../yul-ast/yul-ast.k"
-require "../yul-configuration/yul-configuration.k"
-require "../yul-syntax/yul-syntax.k"
+requires "../yul-ast/yul-ast.k"
+requires "../yul-configuration/yul-configuration.k"
+requires "../yul-syntax/yul-syntax.k"
+requires "../yul-type/yul-type.k"
+requires "../yul-utility/yul-utility.k"
 
 module YUL-TYPE-CHECK
   imports DOMAINS
-  imports YUL-SYNTAX
-  imports YUL-CONFIGURATION
   imports YUL-AST
-
-  syntax Hole ::= "HOLE"
-
-  /**
-   *
-   * Typechecking.
-   *
-   */
+  imports YUL-CONFIGURATION
+  imports YUL-SYNTAX
+  imports YUL-TYPE
+  imports YUL-UTILITY
 
   /**
-   * Type
+   * TypeCheckError
    */
-
-  syntax Type ::=
-    TypeFunction |
-    TypeName |
-    TypeTuple
-
-  syntax TypeFunction ::=
-    TypeFunction(TypeTuple, TypeTuple)
-
-  syntax TypeTuple ::=
-    TypeTuple(Int, List)
-
-  /**
-   * TypeCheckEnvironment
-   */
-
-  syntax TypeCheckVariableAccess ::=
-    "TypeCheckVariableAccessNone" |
-    "TypeCheckVariableAccessReadWrite"
-
-  syntax TypeCheckVariableAttributes ::=
-    TypeCheckVariableAttributes(Type, TypeCheckVariableAccess)
-
-  syntax TypeCheckFunctionAttributes ::=
-    TypeCheckFunctionAttributes(Type)
 
   syntax TypeCheckError ::=
-    TypeCheckErrorFunctionAlreadyDefined()
+    TypeCheckErrorExpressionHasWrongType() |
+    TypeCheckErrorFunctionAlreadyDefined() |
+    TypeCheckErrorFunctionIsUndefined() |
+    TypeCheckErrorInvalidFunctionCall(Int, Int) |
+    TypeCheckErrorVariableAlreadyDefined() |
+    TypeCheckErrorVariableIsNotAccessible() |
+    TypeCheckErrorVariableIsUndefined()
 
   rule
     E:TypeCheckError ~> KI:KItem =>
     E
 
-//   /**
-//    * typecheckAssignment
-//    */
+  /**
+   * typecheckProgram
+   */
 
-//   syntax KItem ::=
-//     typecheckAssignment(AstAssignment) |
-//     typecheckAssignmentIdentifierListResult(
-//       TypeInferenceResult,
-//       AstExpression,
-//       TypeCheckEnvironment
-//     ) [function]
+  syntax KItem ::=
+    typecheckProgram(AstProgram)
 
-//   rule
-//     typecheckAssignment(AstAssignment(IL:List, E:AstExpression)) =>
-//     inferTypeIdentifierList(IL) ~> typecheckAssignment(AstAssignment(HOLE, E))
+  rule
+    typecheckProgram(B:AstBlock) =>
+    (
+      beginTypeCheckScope() ~>
+      setBuiltInFunctionsInTypeCheckScope() ~>
+      typecheckBlock(B) ~>
+      endTypeCheckScope()
+    )
 
-//   rule
-//     T:Type ~> typecheckAssignment(AstAssignment(HOLE, E:AstExpression)) =>
-//     typecheckExpression(E, T)
+  rule
+    typecheckProgram(O:AstObject) =>
+    (
+      beginTypeCheckScope() ~>
+      setBuiltInFunctionsInTypeCheckScope() ~>
+      typecheckObject(O) ~>
+      endTypeCheckScope()
+    )
 
   /**
    * typecheckBlock
@@ -86,267 +68,6 @@ module YUL-TYPE-CHECK
       typecheckStatementSequence(SS) ~>
       endTypeCheckScope()
     )
-
-//   /**
-//    * typecheckCode
-//    */
-
-//   syntax KItem ::=
-//     typecheckCode(AstCode)
-
-//   rule
-//     typecheckCode(AstCode(B:AstBlock)) =>
-//     typecheckBlock(B)
-
-//   /**
-//    * typecheckDebug
-//    */
-
-//   syntax KItem ::=
-//     typecheckDebug(AstDebug) |
-//     typecheckDebugExpressionResult(TypeInferenceResult)
-
-//   rule
-//     typecheckDebug(AstDebug(I:Identifier)) =>
-//     inferTypeExpression(I) ~> typecheckDebug(AstDebug(HOLE))
-
-//   rule
-//     T:Type ~> typecheckDebug(AstDebug(HOLE)) =>
-//     .
-
-//   /**
-//    * typecheckExpression
-//    */
-
-//   syntax KItem ::=
-//     typecheckExpression(AstExpression, Type) |
-//     typecheckExpressionInferResult(TypeInferenceResult, Type)
-
-//   rule
-//     typecheckExpression(E:AstExpression, T:Type) =>
-//     inferTypeExpression(E) ~> typecheckExpression(HOLE, T)
-
-//   rule
-//     T1:Type ~> typecheckExpression(HOLE, T2:Type) =>
-//     TypeCheckError("Expression has wrong type.")
-//     requires T1 =/=K T2
-
-//   rule
-//     T1:Type ~> typecheckExpression(HOLE, T2:Type) =>
-//     .
-//     requires T1 ==K T2
-
-//   /**
-//    * typecheckFor
-//    */
-
-//   syntax KItem ::=
-//     typecheckFor(AstFor)
-
-//   rule
-//     typecheckFor(
-//       AstFor(AstBlock(SS1:List), E:AstExpression, AstBlock(SS2:List), AstBlock(SS3:List))
-//     ) =>
-//     (
-//       typecheckBlock(AstBlock(SS1 ListItem(AstIf(E, AstBlock(.List))))) ~>
-//       typecheckBlock(AstBlock(SS1 SS2)) ~>
-//       typecheckBlock(AstBlock(SS1 SS3))
-//     )
-
-//   /**
-//    * typecheckFunctionArguments
-//    */
-
-//   syntax KItem ::=
-//     typecheckFunctionArguments(List, TypeTuple) |
-
-//   rule
-//     typecheckFunctionArguments(EL:List, TypeTuple(I:Int, _:List), ) =>
-//     TypeCheckError("Function called with wrong number of arguments.")
-//     requires size(EL) =/=Int I
-
-//   rule
-//     typecheckFunctionArguments(.List, TypeTuple(0, .List)) =>
-//     .
-
-//   rule
-//     typecheckFunctionArguments(
-//       ListItem(E:AstExpression) EL:List,
-//       TypeTuple(I:Int, ListItem(T:Type) TL:List)
-//     ) =>
-//     (
-//       typecheckExpression(E, TypeTuple(1, ListItem(T))) ~>
-//       typecheckFunctionArguments(EL, TypeTuple(I -Int 1, TL))
-//     )
-
-  /**
-   * typecheckFunctionDefinition
-   */
-
-  syntax KItem ::=
-    typecheckFunctionDefinition(AstFunctionDefinition)
-
-  rule
-    <k>
-      typecheckFunctionDefinition(
-        AstFunctionDefinition(_:Identifier, TIL1:List, TIL2:List, AstBlock(SS:List))
-      ) =>
-      (
-        restrictVariableAccessInTypeCheckScope() ~>
-        // typecheckBlock(
-        //   AstBlock(
-        //     ListItem(AstVariableDeclaration1(TIL1))
-        //     ListItem(AstVariableDeclaration1(TIL2))
-        //     SS
-        //   )
-        // ) ~>
-        restoreTypeCheckEnvironment(VES, FES)
-      )
-      ...
-    </k>
-    <cTypeCheckVariableEnvironmentStack>
-      VES:List
-    </cTypeCheckVariableEnvironmentStack>
-    <cTypeCheckFunctionEnvironmentStack>
-      FES:List
-    </cTypeCheckFunctionEnvironmentStack>
-
-//   /**
-//    * typecheckIf
-//    */
-
-//   syntax KItem ::=
-//     typecheckIf(AstIf)
-
-//   rule
-//     typecheckIf(AstIf(E:AstExpression, B:AstBlock)) =>
-//     (
-//       typecheckExpression(E, TypeTuple(1, ListItem(bool))) ~>
-//       typecheckBlock(B)
-//     )
-
-//   /**
-//    * typecheckObject
-//    */
-
-//   syntax KItem ::=
-//     typecheckObject(AstObject)
-
-//   rule
-//     typecheckObject(AstObject(_:LiteralString, C:AstCode, OODS:List)) =>
-//     (
-//       typecheckCode(C) ~>
-//       typecheckObjectOrDataSequence(OODS)
-//     )
-
-//   /**
-//    * typecheckObjectOrData
-//    */
-
-//   syntax KItem ::=
-//     typecheckObjectOrData(AstObjectOrData)
-
-//   rule
-//     typecheckObjectOrData(D:AstData) =>
-//     .
-
-//   rule
-//     typecheckObjectOrData(O:AstObject) =>
-//     typecheckObject(O)
-
-//   /**
-//    * typecheckObjectOrDataSequence
-//    */
-
-//   syntax KItem ::=
-//     typecheckObjectOrDataSequence(List)
-  
-//   rule
-//     typecheckObjectOrDataSequence(.List) =>
-//     .
-
-//   rule
-//     typecheckObjectOrDataSequence(ListItem(OOD:AstObjectOrData) OODS:List) =>
-//     (
-//       typecheckObjectOrData(OOD) ~>
-//       typecheckObjectOrDataSequence(OODS)
-//     )
-
-  /**
-   * typecheckProgram
-   */
-
-  syntax KItem ::=
-    typecheckProgram(AstProgram)
-
-  rule
-    typecheckProgram(B:AstBlock) =>
-    (
-      beginTypeCheckScope() ~>
-      // setBuiltInFunctions() ~>
-      typecheckBlock(B) ~>
-      endTypeCheckScope()
-    )
-
-  // rule
-  //   typecheckProgram(O:AstObject) =>
-  //   (
-  //     beginTypeCheckScope() ~>
-  //     // setBuiltInFunctions() ~>
-  //     typecheckObject(O) ~>
-  //     endTypeCheckScope()
-  //   )
-
-  /**
-   * typecheckStatement
-   */
-
-  syntax KItem ::=
-    typecheckStatement(AstStatement)
-
-  // rule
-  //   typecheckStatement(A:AstAssignment) =>
-  //   typecheckAssignment(A)
-
-  rule
-    typecheckStatement(B:AstBlock) =>
-    typecheckBlock(B)
-
-  // rule
-  //   typecheckStatement(B:Break) =>
-  //   .
-
-  // rule
-  //   typecheckStatement(C:Continue) =>
-  //   .
-
-  // rule
-  //   typecheckStatement(D:AstDebug) =>
-  //   typecheckDebug(D)
-
-  // rule
-  //   typecheckStatement(F:AstFor) =>
-  //   typecheckFor(F)
-
-  // rule
-  //   typecheckStatement(E:AstExpression) =>
-  //   typecheckExpression(E, makeTypeTuple())
-
-  rule
-    typecheckStatement(FD:AstFunctionDefinition) =>
-    typecheckFunctionDefinition(FD)
-
-  // rule
-  //   typecheckStatement(I:AstIf) =>
-  //   typecheckIf(I)
-
-  // rule
-  //   typecheckStatement(S:AstSwitch) =>
-  //   typecheckSwitch(S)
-
-  // rule
-  //   typecheckStatement(VD:AstVariableDeclaration) =>
-  //   typecheckVariableDeclaration(VD)
 
   /**
    * typecheckStatementSequence
@@ -407,190 +128,524 @@ module YUL-TYPE-CHECK
     lookupFunctionInTypeCheckScope(I) ~> checkFunctionNotInTypeCheckScope(HOLE)
 
   rule
-    .Nothing ~> checkFunctionNotInTypeCheckScope(HOLE) =>
+    Nothing() ~> checkFunctionNotInTypeCheckScope(HOLE) =>
     .
 
   rule
     Just(_:TypeCheckFunctionAttributes) ~> checkFunctionNotInTypeCheckScope(HOLE) =>
     TypeCheckErrorFunctionAlreadyDefined()
 
-//   /**
-//    * typecheckSwitch
-//    */
+  /**
+   * typecheckStatement
+   */
 
-//   syntax KItem ::=
-//     typecheckCaseSequence(List, Type) |
-//     typecheckSwitch(AstSwitch)
+  syntax KItem ::=
+    typecheckStatement(AstStatement)
 
-//   rule
-//     typecheckSwitch(AstSwitch1(E:AstExpression, CS:List)) =>
-//     typecheckSwitch(AstSwitch2(E, CS, AstDefault(AstBlock(.List))))
+  rule
+    typecheckStatement(A:AstAssignment) =>
+    typecheckAssignment(A)
 
-//   rule
-//     typecheckSwitch(AstSwitch2(E:AstExpression, CS:List, D:AstDefault)) =>
-//     (
-//       inferTypeExpression(E) ~> typecheckSwitch(AstSwitch2(HOLE, CS, D))
-//     )
+  rule
+    typecheckStatement(B:AstBlock) =>
+    typecheckBlock(B)
 
-//   rule
-//     T:Type ~> typecheckSwitch(AstSwitch2(HOLE, CS:List, D:AstDefault) =>
-//     (
-//       typecheckCaseSequence(CS, T) ~>
-//       typecheckBlock(B)
-//     )
+  rule
+    typecheckStatement(B:Break) =>
+    .
 
-//   rule
-//     typecheckCaseSequence(.List, _:Type) =>
-//     .
+  rule
+    typecheckStatement(C:Continue) =>
+    .
 
-//   rule
-//     typecheckCaseSequence(ListItem(AstCase(TL:AstTypedLiteral, B:AstBlock)) CS:List, T:Type) =>
-//     (
-//       typecheckExpression(TL, T) ~>
-//       typecheckBlock(B) ~>
-//       typecheckCaseSequence(CS, T)
-//     )
+  rule
+    typecheckStatement(D:AstDebug) =>
+    typecheckDebug(D)
 
-//   /**
-//    * typecheckVariableDeclaration
-//    */
+  rule
+    typecheckStatement(F:AstFor) =>
+    typecheckFor(F)
 
-//   syntax KItem ::=
-//     typecheckVariableDeclaration(AstVariableDeclaration) |
-//     typecheckVariableDeclarationSinglePass(List)
+  rule
+    typecheckStatement(E:AstExpression) =>
+    typecheckExpression(E, makeTypeTuple())
 
-//   rule
-//     typecheckVariableDeclaration(AstVariableDeclaration1(TIL:List)) =>
-//     typecheckVariableDeclarationSinglePass(TIL)
+  rule
+    typecheckStatement(FD:AstFunctionDefinition) =>
+    typecheckFunctionDefinition(FD)
 
-//   rule
-//     typecheckVariableDeclaration(AstVariableDeclaration2(TIL:List, E:AstExpression)) =>
-//     (
-//       typecheckExpression(E, getTypedIdentifierListTypeTuple(TIL)) ~>
-//       typecheckVariableDeclarationSinglePass(TIL)
-//     )
+  rule
+    typecheckStatement(I:AstIf) =>
+    typecheckIf(I)
 
-//   rule
-//     typecheckVariableDeclarationSinglePass(.List) =>
-//     .
+  rule
+    typecheckStatement(S:AstSwitch) =>
+    typecheckSwitch(S)
 
-//   rule
-//     typecheckVariableDeclarationSinglePass(
-//       ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List
-//     ) =>
-//     TypeCheckError("Variable is already defined.")
-//     requires lookupVariable(I) =/=K .Nothing
+  rule
+    typecheckStatement(VD:AstVariableDeclaration) =>
+    typecheckVariableDeclaration(VD)
 
-//   rule
-//     typecheckVariableDeclarationSinglePass(
-//       ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List
-//     ) =>
-//     (
-//       setVariable(I, TypeCheckVariableAttributes(TN, TypeCheckVariableAccessReadWrite) ~>
-//       typecheckVariableDeclarationSinglePass(TIL)
-//     )
-//     requires lookupVariable(I) ==K .Nothing
+  /**
+   * typecheckAssignment
+   */
 
-//   /**
-//    *
-//    * Type inference.
-//    *
-//    */
+  syntax KItem ::=
+    typecheckAssignment(AstAssignment) |
+    typecheckAssignment(Hole, AstExpression)
 
-//   /**
-//    * TypeInferenceResult
-//    */
+  rule
+    typecheckAssignment(AstAssignment(IL:List, E:AstExpression)) =>
+    inferTypeIdentifierList(IL) ~> typecheckAssignment(HOLE, E)
 
-//   syntax TypeInferenceResult ::=
-//     TypeInferenceResultError(String) |
-//     TypeInferenceResultSuccess(Type)
+  rule
+    TT:TypeTuple ~> typecheckAssignment(HOLE, E:AstExpression) =>
+    typecheckExpression(E, TT)
 
-//   /**
-//    * inferTypeExpression
-//    */
+  /**
+   * inferTypeIdentifierList
+   */
 
-//   syntax KItem ::=
-//     inferTypeExpression(AstExpression) |
-//     inferTypeExpressionFunctionArgumentsResult(TypeCheckResult, TypeTuple) |
-//     inferTypeExpressionFunctionLookupResult(Maybe, List) |
-//     inferTypeExpressionVariableLookupResult(Maybe)
+  syntax KItem ::=
+    inferTypeIdentifierList(List) |
+    inferTypeIdentifierList(Hole)
 
-//   rule
-//     inferTypeExpression(I:Identifier) =>
-//     inferTypeExpressionVariableLookupResult(lookupVariable(I))
+  rule
+    inferTypeIdentifierList(.List) =>
+    makeTypeTuple()
 
-//   rule
-//     inferTypeExpressionVariableLookupResult(.Nothing) =>
-//     TypeCheckError("Variable is undefined.")
+  rule
+    inferTypeIdentifierList(ListItem(I:Identifier) IL:List) =>
+    inferTypeIdentifierList(IL) ~> I ~> inferTypeIdentifierList(HOLE)
 
-//   rule
-//     inferTypeExpressionVariableLookupResult(Just(TypeCheckVariableAttributes(_:Type, TypeCheckVariableAccessNone))) =>
-//     TypeCheckError("Variable is not accesible.")
+  rule
+    TT:TypeTuple ~> I:Identifier ~> inferTypeIdentifierList(HOLE) =>
+    inferTypeExpression(I) ~> TT ~> inferTypeIdentifierList(HOLE)
 
-//   rule
-//     inferTypeExpressionVariableLookupResult(
-//       Just(TypeCheckVariableAttributes(T:Type, TypeCheckVariableAccessReadWrite))
-//     ) =>
-//     TypeTuple(1, ListItem(T))
+  rule
+    TT1:TypeTuple ~> TT2:TypeTuple ~> inferTypeIdentifierList(HOLE) =>
+    mergeTypeTuples(TT1, TT2)
 
-//   rule
-//     inferTypeExpression(AstTypedLiteral(_:Literal, TN:TypeName)) =>
-//     TypeTuple(1, ListItem(TN))
+  /**
+   * typecheckExpression
+   */
 
-//   rule
-//     inferTypeExpression(AstFunctionCall(I:Identifier, EL:List)) =>
-//     inferTypeExpressionFunctionLookupResult(lookupFunction(I), EL)
+  syntax KItem ::=
+    typecheckExpression(AstExpression, TypeTuple) |
+    typecheckExpression(Hole, TypeTuple)
 
-//   rule
-//     inferTypeExpressionFunctionLookupResult(.Nothing, EL:List) =>
-//     TypeCheckError("Function is undefined.")
+  rule
+    typecheckExpression(E:AstExpression, TT:TypeTuple) =>
+    inferTypeExpression(E) ~> typecheckExpression(HOLE, TT)
 
-//   rule
-//     inferTypeExpressionFunctionLookupResult(
-//       Just(TypeCheckFunctionAttributes(TypeFunction(TT1:TypeTuple, TT2:TypeTuple))),
-//       EL:List
-//     ) =>
-//     inferTypeExpressionFunctionArgumentsResult(typecheckFunctionArguments(EL, TT1), TT2)
+  rule
+    TT1:TypeTuple ~> typecheckExpression(HOLE, TT2:TypeTuple) =>
+    TypeCheckErrorExpressionHasWrongType()
+    requires TT1 =/=K TT2
 
-//   rule
-//     inferTypeExpressionFunctionArgumentsResult(TypeCheckError(S:String), _:TypeTuple) =>
-//     TypeCheckError(S)
+  rule
+    TT1:TypeTuple ~> typecheckExpression(HOLE, TT2:TypeTuple) =>
+    .
+    requires TT1 ==K TT2
 
-//   rule
-//     inferTypeExpressionFunctionArgumentsResult(
-//       TypeCheckResultSuccess(),
-//       TT:TypeTuple
-//     ) =>
-//     TT
+  /**
+   * inferTypeExpression
+   */
 
-//   /**
-//    * inferTypeIdentifierList
-//    */
+  syntax KItem ::=
+    inferTypeExpression(AstExpression)
 
-//   syntax TypeInferenceResult ::=
-//     inferTypeIdentifierList(List)
+  rule
+    inferTypeExpression(FC:AstFunctionCall) =>
+    inferTypeExpressionFunctionCall(FC)
 
-//   rule
-//     inferTypeIdentifierList(.List, ) =>
-//     makeTypeTuple()
+  rule
+    inferTypeExpression(TL:AstTypedLiteral) =>
+    inferTypeExpressionTypedLiteral(TL)
 
-//   rule
-//     inferTypeIdentifierList(ListItem(I:Identifier) IL:List) =>
-//     inferTypeExpression(I) ~> inferTypeIdentifierList(HOLE, IL)
+  rule
+    inferTypeExpression(I:Identifier) =>
+    inferTypeExpressionIdentifier(I)
 
-//   rule
-//     T:TypeTuple ~> inferTypeIdentifierList(HOLE, IL:List) =>
-//     inferTypeIdentifierList(IL) ~> inferTypeIdentifierList(T, HOLE)
+  /**
+   * inferTypeExpressionTypedLiteral
+   */
 
-//   rule
-//     T1:TypeTuple ~> inferTypeIdentifierList(T2:TypeTuple, HOLE) =>
-//     mergeTypeTuples(T2, T1)
+  syntax KItem ::=
+    inferTypeExpressionTypedLiteral(AstTypedLiteral)
 
-//   /**
-//    *
-//    * Environment utility.
-//    *
-//    */
+  rule
+    inferTypeExpressionTypedLiteral(AstTypedLiteral(_:Literal, TN:TypeName)) =>
+    makeTypeTuple(TN)
+
+  /**
+   * inferTypeExpressionFunctionCall
+   */
+
+  syntax KItem ::=
+    inferTypeExpressionFunctionCall(AstFunctionCall) |
+    inferTypeExpressionFunctionCall(Hole, List)
+
+  rule
+    inferTypeExpressionFunctionCall(AstFunctionCall(I:Identifier, EL:List)) =>
+    lookupFunctionInTypeCheckScope(I) ~> inferTypeExpressionFunctionCall(HOLE, EL)
+
+  rule
+    Nothing() ~> inferTypeExpressionFunctionCall(HOLE, EL:List) =>
+    TypeCheckErrorFunctionIsUndefined()
+
+  rule
+    (
+      Just(TypeCheckFunctionAttributes(TypeFunction(TT1:TypeTuple, TT2:TypeTuple))) ~>
+      inferTypeExpressionFunctionCall(HOLE, EL:List)
+    ) =>
+    (
+      typecheckFunctionArguments(EL, TT1) ~>
+      TT2
+    )
+
+  /**
+   * typecheckFunctionArguments
+   */
+
+  syntax KItem ::=
+    typecheckFunctionArguments(List, TypeTuple)
+
+  rule
+    typecheckFunctionArguments(EL:List, TypeTuple(I:Int, _:List)) =>
+    TypeCheckErrorInvalidFunctionCall(size(EL), I)
+    requires size(EL) =/=Int I
+
+  rule
+    typecheckFunctionArguments(.List, TypeTuple(0, .List)) =>
+    .
+
+  rule
+    typecheckFunctionArguments(
+      ListItem(E:AstExpression) EL:List,
+      TypeTuple(I:Int, ListItem(T:Type) TL:List)
+    ) =>
+    (
+      typecheckExpression(E, makeTypeTuple(T)) ~>
+      typecheckFunctionArguments(EL, TypeTuple(I -Int 1, TL))
+    )
+
+  /**
+   * inferTypeExpressionIdentifier
+   */
+
+  syntax KItem ::=
+    inferTypeExpressionIdentifier(Identifier) |
+    inferTypeExpressionIdentifier(Hole)
+
+  rule
+    inferTypeExpressionIdentifier(I:Identifier) =>
+    lookupVariableInTypeCheckScope(I) ~> inferTypeExpressionIdentifier(HOLE)
+
+  rule
+    Nothing() ~> inferTypeExpressionIdentifier(HOLE) =>
+    TypeCheckErrorVariableIsUndefined()
+
+  rule
+    Just(
+      TypeCheckVariableAttributes(_:Type, TypeCheckVariableAccessNone())
+    ) ~> inferTypeExpressionIdentifier(HOLE) =>
+    TypeCheckErrorVariableIsNotAccessible()
+
+  rule
+    Just(
+      TypeCheckVariableAttributes(T:Type, TypeCheckVariableAccessReadWrite())
+    ) ~> inferTypeExpressionIdentifier(HOLE) =>
+    makeTypeTuple(T)
+
+  /**
+   * typecheckDebug
+   */
+
+  syntax KItem ::=
+    typecheckDebug(AstDebug) |
+    typecheckDebug(Hole)
+
+  rule
+    typecheckDebug(AstDebug(I:Identifier)) =>
+    inferTypeExpression(I) ~> typecheckDebug(HOLE)
+
+  rule
+    _:TypeTuple ~> typecheckDebug(HOLE) =>
+    .
+
+  /**
+   * typecheckFor
+   */
+
+  syntax KItem ::=
+    typecheckFor(AstFor)
+
+  rule
+    typecheckFor(
+      AstFor(AstBlock(SS1:List), E:AstExpression, AstBlock(SS2:List), AstBlock(SS3:List))
+    ) =>
+    (
+      typecheckBlock(AstBlock(SS1 ListItem(AstIf(E, AstBlock(.List))))) ~>
+      typecheckBlock(AstBlock(SS1 SS2)) ~>
+      typecheckBlock(AstBlock(SS1 SS3))
+    )
+
+  /**
+   * typecheckFunctionDefinition
+   */
+
+  syntax KItem ::=
+    typecheckFunctionDefinition(AstFunctionDefinition)
+
+  rule
+    <k>
+      typecheckFunctionDefinition(
+        AstFunctionDefinition(_:Identifier, TIL1:List, TIL2:List, AstBlock(SS:List))
+      ) =>
+      (
+        restrictVariableAccessInTypeCheckScope() ~>
+        typecheckBlock(
+          AstBlock(
+            ListItem(AstVariableDeclaration1(TIL1))
+            ListItem(AstVariableDeclaration1(TIL2))
+            SS
+          )
+        ) ~>
+        restoreTypeCheckEnvironment(VES, FES)
+      )
+      ...
+    </k>
+    <cTypeCheckVariableEnvironmentStack>
+      VES:List
+    </cTypeCheckVariableEnvironmentStack>
+    <cTypeCheckFunctionEnvironmentStack>
+      FES:List
+    </cTypeCheckFunctionEnvironmentStack>
+
+  /**
+   * typecheckIf
+   */
+
+  syntax KItem ::=
+    typecheckIf(AstIf)
+
+  rule
+    typecheckIf(AstIf(E:AstExpression, B:AstBlock)) =>
+    (
+      typecheckExpression(E, makeTypeTuple(bool)) ~>
+      typecheckBlock(B)
+    )
+
+  /**
+   * typecheckSwitch
+   */
+
+  syntax KItem ::=
+    typecheckSwitch(AstSwitch) |
+    typecheckSwitch(Hole, List, AstDefault)
+
+  rule
+    typecheckSwitch(AstSwitch1(E:AstExpression, CS:List)) =>
+    typecheckSwitch(AstSwitch2(E, CS, AstDefault(AstBlock(.List))))
+
+  rule
+    typecheckSwitch(AstSwitch2(E:AstExpression, CS:List, D:AstDefault)) =>
+    inferTypeExpression(E) ~> typecheckSwitch(HOLE, CS, D)
+
+  rule
+    TT:TypeTuple ~> typecheckSwitch(HOLE, CS:List, D:AstDefault) =>
+    (
+      typecheckCaseSequence(CS, TT) ~>
+      typecheckDefault(D)
+    )
+
+  /**
+   * typecheckCaseSequence
+   */
+
+  syntax KItem ::=
+    typecheckCaseSequence(List, TypeTuple)
+
+  rule
+    typecheckCaseSequence(.List, _:TypeTuple) =>
+    .
+
+  rule
+    typecheckCaseSequence(ListItem(C:AstCase) CS:List, TT:TypeTuple) =>
+    (
+      typecheckCase(C, TT) ~>
+      typecheckCaseSequence(CS, TT)
+    )
+
+  /**
+   * typecheckCase
+   */
+
+  syntax KItem ::=
+    typecheckCase(AstCase, TypeTuple)
+
+  rule
+    typecheckCase(AstCase(TL:AstTypedLiteral, B:AstBlock), TT:TypeTuple) =>
+    (
+      typecheckExpression(TL, TT) ~>
+      typecheckBlock(B)
+    )
+
+  /**
+   * typecheckDefault
+   */
+
+  syntax KItem ::=
+    typecheckDefault(AstDefault)
+
+  rule
+    typecheckDefault(AstDefault(B:AstBlock)) =>
+    typecheckBlock(B)
+
+  /**
+   * typecheckVariableDeclaration
+   */
+
+  syntax KItem ::=
+    typecheckVariableDeclaration(AstVariableDeclaration)
+
+  rule
+    typecheckVariableDeclaration(AstVariableDeclaration1(TIL:List)) =>
+    setDeclaredVariablesInTypeCheckScope(TIL)
+
+  rule
+    typecheckVariableDeclaration(AstVariableDeclaration2(TIL:List, E:AstExpression)) =>
+    (
+      typecheckExpression(E, getTypedIdentifierListTypeTuple(TIL)) ~>
+      setDeclaredVariablesInTypeCheckScope(TIL)
+    )
+
+  /**
+   * setDeclaredVariablesInTypeCheckScope
+   */
+
+  syntax KItem ::=
+    setDeclaredVariablesInTypeCheckScope(List)
+
+  rule
+    setDeclaredVariablesInTypeCheckScope(.List) =>
+    .
+
+  rule
+    setDeclaredVariablesInTypeCheckScope(
+      ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List
+    ) =>
+    (
+      checkVariableNotInTypeCheckScope(I) ~>
+      setVariableInTypeCheckScope(
+        I,
+        TypeCheckVariableAttributes(TN, TypeCheckVariableAccessReadWrite())
+      ) ~>
+      setDeclaredVariablesInTypeCheckScope(TIL)
+    )
+
+  /**
+   * checkVariableNotInTypeCheckScope
+   */
+
+  syntax KItem ::=
+    checkVariableNotInTypeCheckScope(Identifier) |
+    checkVariableNotInTypeCheckScope(Hole)
+
+  rule
+    checkVariableNotInTypeCheckScope(I:Identifier) =>
+    lookupVariableInTypeCheckScope(I) ~> checkVariableNotInTypeCheckScope(HOLE)
+
+  rule
+    Nothing() ~> checkVariableNotInTypeCheckScope(HOLE) =>
+    .
+
+  rule
+    Just(_:TypeCheckVariableAttributes) ~> checkVariableNotInTypeCheckScope(HOLE) =>
+    TypeCheckErrorVariableAlreadyDefined()
+
+  /**
+   * typecheckObject
+   */
+
+  syntax KItem ::=
+    typecheckObject(AstObject)
+
+  rule
+    typecheckObject(AstObject(_:LiteralString, C:AstCode, OODS:List)) =>
+    (
+      typecheckCode(C) ~>
+      typecheckObjectOrDataSequence(OODS)
+    )
+
+  /**
+   * typecheckCode
+   */
+
+  syntax KItem ::=
+    typecheckCode(AstCode)
+
+  rule
+    typecheckCode(AstCode(B:AstBlock)) =>
+    typecheckBlock(B)
+
+  /**
+   * typecheckObjectOrDataSequence
+   */
+
+  syntax KItem ::=
+    typecheckObjectOrDataSequence(List)
+
+  rule
+    typecheckObjectOrDataSequence(.List) =>
+    .
+
+  rule
+    typecheckObjectOrDataSequence(ListItem(OOD:AstObjectOrData) OODS:List) =>
+    (
+      typecheckObjectOrData(OOD) ~>
+      typecheckObjectOrDataSequence(OODS)
+    )
+
+  /**
+   * typecheckObjectOrData
+   */
+
+  syntax KItem ::=
+    typecheckObjectOrData(AstObjectOrData)
+
+  rule
+    typecheckObjectOrData(D:AstData) =>
+    .
+
+  rule
+    typecheckObjectOrData(O:AstObject) =>
+    typecheckObject(O)
+
+  /**
+   *
+   * Environment utility.
+   *
+   */
+
+  /**
+   * TypeCheckVariableAttributes
+   */
+
+  syntax TypeCheckVariableAccess ::=
+    TypeCheckVariableAccessNone() |
+    TypeCheckVariableAccessReadWrite()
+
+  syntax TypeCheckVariableAttributes ::=
+    TypeCheckVariableAttributes(Type, TypeCheckVariableAccess)
+
+  /**
+   * TypeCheckFunctionAttributes
+   */
+
+  syntax TypeCheckFunctionAttributes ::=
+    TypeCheckFunctionAttributes(Type)
 
   /**
    * setVariableInTypeCheckScope
@@ -628,333 +683,6 @@ module YUL-TYPE-CHECK
       ListItem(updateMap(FE, I |-> FA)) FES:List
     </cTypeCheckFunctionEnvironmentStack>
 
-//   /**
-//    * setBuiltInFunctions
-//    */
-
-//   syntax TypeCheckEnvironment ::=
-//     setBuiltInFunctions() |
-//     setBuiltInFunctions2(List)
-
-//   rule
-//     setBuiltInFunctions() =>
-//     setBuiltInFunctions2(
-//       makeBuiltInFunctionDescription(
-//         and, makeTypeTuple(bool, bool), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         not, makeTypeTuple(bool), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         or, makeTypeTuple(bool, bool), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         xor, makeTypeTuple(bool, bool), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         addmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         addu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         andu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         byte, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         divs256, makeTypeTuple(s256, s256), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         divu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         equ256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         expu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         gts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         gtu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         iszerou256, makeTypeTuple(u256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         lts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         ltu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         mods256, makeTypeTuple(s256, s256), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         modu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         mulmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         mulu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         notu256, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         oru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         sars256, makeTypeTuple(s256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         shlu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         shru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         signextendu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         subu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         xoru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         mload, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         msize, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         mstore, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         mstore8, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         sload, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         sstore, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         abort, makeTypeTuple(), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         call, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         callcode, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         create, makeTypeTuple(u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         create2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         delegatecall, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         log0, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         log1, makeTypeTuple(u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         log2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         log3, makeTypeTuple(u256, u256, u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         log4, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         return, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         revert, makeTypeTuple(u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         selfdestruct, makeTypeTuple(u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         balance, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blockcoinbase, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blockdifficulty, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blockgaslimit, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blockhash, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blocknumber, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         blocktimestamp, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         calldatacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         calldataload, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         calldatasize, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         caller, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         callvalue, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         codecopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         codesize, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         extcodecopy, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         extcodehash, makeTypeTuple(u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         extcodesize, makeTypeTuple(u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         gasleft, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         this, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         txgasprice, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         txorigin, makeTypeTuple(), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         combineu64tou256, makeTypeTuple(u64, u64, u64, u64), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         datacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         discard, makeTypeTuple(bool), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         discardu256, makeTypeTuple(u256), makeTypeTuple()
-//       )
-//       makeBuiltInFunctionDescription(
-//         keccak256, makeTypeTuple(u256, u256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         splitu256tou64, makeTypeTuple(u256), makeTypeTuple(u64, u64, u64, u64)
-//       )
-//       makeBuiltInFunctionDescription(
-//         booltos256, makeTypeTuple(bool), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         booltou256, makeTypeTuple(bool), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         booltou32, makeTypeTuple(bool), makeTypeTuple(u32)
-//       )
-//       makeBuiltInFunctionDescription(
-//         booltou64, makeTypeTuple(bool), makeTypeTuple(u64)
-//       )
-//       makeBuiltInFunctionDescription(
-//         s256tobool, makeTypeTuple(s256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         s256tou256, makeTypeTuple(s256), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         s256tou32, makeTypeTuple(s256), makeTypeTuple(u32)
-//       )
-//       makeBuiltInFunctionDescription(
-//         s256tou64, makeTypeTuple(s256), makeTypeTuple(u64)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u256tobool, makeTypeTuple(u256), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u256tos256, makeTypeTuple(u256), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u256tou32, makeTypeTuple(u256), makeTypeTuple(u32)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u256tou64, makeTypeTuple(u256), makeTypeTuple(u64)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u32tobool, makeTypeTuple(u32), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u32tos256, makeTypeTuple(u32), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u32tou256, makeTypeTuple(u32), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u32tou64, makeTypeTuple(u32), makeTypeTuple(u64)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u64tobool, makeTypeTuple(u64), makeTypeTuple(bool)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u64tos256, makeTypeTuple(u64), makeTypeTuple(s256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u64tou256, makeTypeTuple(u64), makeTypeTuple(u256)
-//       )
-//       makeBuiltInFunctionDescription(
-//         u64tou32, makeTypeTuple(u64), makeTypeTuple(u32)
-//       )
-//     )
-
-//   rule
-//     setBuiltInFunctions2(.List) =>
-//     .
-
-//   rule
-//     setBuiltInFunctions2(
-//       ListItem(
-//         BuiltInFunctionDescription(IBIF:IdentifierBuiltInFunction, T1:TypeTuple, T2:TypeTuple)
-//       ) L:List
-//     ) =>
-//     setBuiltInFunctions2(L, setFunctionInTypeCheckScope(IBIF, TypeCheckFunctionAttributes(TypeFunction(T1, T2))))
-
-//   /**
-//    * makeBuiltInFunctionDescription
-//    */
-
-//   syntax BuiltInFunctionDescription ::=
-//     BuiltInFunctionDescription(IdentifierBuiltInFunction, TypeTuple, TypeTuple)
-
-//   syntax List ::=
-//     makeBuiltInFunctionDescription(IdentifierBuiltInFunction, TypeTuple, TypeTuple)
-
-//   rule
-//     makeBuiltInFunctionDescription(IBIF:IdentifierBuiltInFunction, T1:TypeTuple, T2:TypeTuple) =>
-//     ListItem(BuiltInFunctionDescription(IBIF, T1, T2))
-
   /**
    * lookupVariableInTypeCheckScope
    */
@@ -977,7 +705,7 @@ module YUL-TYPE-CHECK
 
   rule
     lookupVariableInTypeCheckScopeAux(I:Identifier, .List) =>
-    .Nothing
+    Nothing()
 
   rule
     lookupVariableInTypeCheckScopeAux(I:Identifier, ListItem(VE:Map) VES:List) =>
@@ -1011,7 +739,7 @@ module YUL-TYPE-CHECK
 
   rule
     lookupFunctionInTypeCheckScopeAux(I:Identifier, .List) =>
-    .Nothing
+    Nothing()
 
   rule
     lookupFunctionInTypeCheckScopeAux(I:Identifier, ListItem(FE:Map) FES:List) =>
@@ -1124,7 +852,7 @@ module YUL-TYPE-CHECK
       I:Identifier,
       TypeCheckVariableAttributes(T:Type, _:TypeCheckVariableAccess)
     ) =>
-    updateMap(VE, I |-> TypeCheckVariableAttributes(T, TypeCheckVariableAccessNone))
+    updateMap(VE, I |-> TypeCheckVariableAttributes(T, TypeCheckVariableAccessNone()))
 
   /**
    * restoreTypeCheckEnvironment
@@ -1149,128 +877,117 @@ module YUL-TYPE-CHECK
     </cTypeCheckFunctionEnvironmentStack>
 
   /**
-   *
-   * Miscellaneous.
-   *
+   * setBuiltInFunctionsInTypeCheckScope
    */
 
-  /**
-   * Maybe
-   */
-
-  syntax Maybe ::=
-    ".Nothing" |
-    Just(KItem)
-
-  /**
-   * isAstFunctionDefinition [BUILT-IN]
-   */
-
-  syntax Bool ::=
-    isAstFunctionDefinition(AstStatement)
-
-  /**
-   * getFunctionDefinitionName
-   */
-
-  syntax Identifier ::=
-    getFunctionDefinitionName(AstFunctionDefinition) [function]
+  syntax KItem ::=
+    setBuiltInFunctionInTypeCheckScope(Identifier, TypeTuple, TypeTuple) |
+    setBuiltInFunctionsInTypeCheckScope()
 
   rule
-    getFunctionDefinitionName(
-      AstFunctionDefinition(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
-    ) =>
-    I
+    setBuiltInFunctionInTypeCheckScope(I:Identifier, TT1:TypeTuple, TT2:TypeTuple) =>
+    setFunctionInTypeCheckScope(I, TypeCheckFunctionAttributes(TypeFunction(TT1, TT2)))
 
-  /**
-   * getFunctionDefinitionType
-   */
-
-  syntax Type ::=
-    getFunctionDefinitionType(AstFunctionDefinition) [function]
-
+  /* lint:disable */
   rule
-    getFunctionDefinitionType(
-      AstFunctionDefinition(I:Identifier, TIL1:List, TIL2:List, B:AstBlock)
-    ) =>
-    TypeFunction(getTypedIdentifierListTypeTuple(TIL1), getTypedIdentifierListTypeTuple(TIL2))
-
-  /**
-   * makeTypeTuple
-   */
-
-  syntax TypeTuple ::=
-    makeTypeTuple() [function] |
-    makeTypeTuple(Type) [function] |
-    makeTypeTuple(Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type, Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type, Type, Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type, Type, Type, Type, Type) [function] |
-    makeTypeTuple(Type, Type, Type, Type, Type, Type, Type, Type) [function]
-
-  rule
-    makeTypeTuple() =>
-    TypeTuple(0, .List)
-
-  rule
-    makeTypeTuple(T1:Type) =>
-    TypeTuple(1, ListItem(T1))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type) =>
-    TypeTuple(2, ListItem(T1) ListItem(T2))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type, T3:Type) =>
-    TypeTuple(3, ListItem(T1) ListItem(T2) ListItem(T3))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type) =>
-    TypeTuple(4, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type) =>
-    TypeTuple(5, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type, T6:Type) =>
-    TypeTuple(6, ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5) ListItem(T6))
-
-  rule
-    makeTypeTuple(T1:Type, T2:Type, T3:Type, T4:Type, T5:Type, T6:Type, T7:Type) =>
-    TypeTuple(
-      7,
-      ListItem(T1) ListItem(T2) ListItem(T3) ListItem(T4) ListItem(T5) ListItem(T6) ListItem(T7)
+    setBuiltInFunctionsInTypeCheckScope() => (
+      setBuiltInFunctionInTypeCheckScope(and, makeTypeTuple(bool, bool), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(not, makeTypeTuple(bool), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(or, makeTypeTuple(bool, bool), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(xor, makeTypeTuple(bool, bool), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(addmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(addu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(andu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(byte, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(divs256, makeTypeTuple(s256, s256), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(divu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(equ256, makeTypeTuple(u256, u256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(expu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(gts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(gtu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(iszerou256, makeTypeTuple(u256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(lts256, makeTypeTuple(s256, s256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(ltu256, makeTypeTuple(u256, u256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(mods256, makeTypeTuple(s256, s256), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(modu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(mulmodu256, makeTypeTuple(u256, u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(mulu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(notu256, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(oru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(sars256, makeTypeTuple(s256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(shlu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(shru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(signextendu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(subu256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(xoru256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(mload, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(msize, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(mstore, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(mstore8, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(sload, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(sstore, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(abort, makeTypeTuple(), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(call, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(callcode, makeTypeTuple(u256, u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(create, makeTypeTuple(u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(create2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(delegatecall, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(log0, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(log1, makeTypeTuple(u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(log2, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(log3, makeTypeTuple(u256, u256, u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(log4, makeTypeTuple(u256, u256, u256, u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(return, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(revert, makeTypeTuple(u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(selfdestruct, makeTypeTuple(u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(balance, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blockcoinbase, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blockdifficulty, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blockgaslimit, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blockhash, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blocknumber, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(blocktimestamp, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(calldatacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(calldataload, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(calldatasize, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(caller, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(callvalue, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(codecopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(codesize, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(extcodecopy, makeTypeTuple(u256, u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(extcodehash, makeTypeTuple(u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(extcodesize, makeTypeTuple(u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(gasleft, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(this, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(txgasprice, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(txorigin, makeTypeTuple(), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(combineu64tou256, makeTypeTuple(u64, u64, u64, u64), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(datacopy, makeTypeTuple(u256, u256, u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(discard, makeTypeTuple(bool), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(discardu256, makeTypeTuple(u256), makeTypeTuple()) ~>
+      setBuiltInFunctionInTypeCheckScope(keccak256, makeTypeTuple(u256, u256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(splitu256tou64, makeTypeTuple(u256), makeTypeTuple(u64, u64, u64, u64)) ~>
+      setBuiltInFunctionInTypeCheckScope(booltos256, makeTypeTuple(bool), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(booltou256, makeTypeTuple(bool), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(booltou32, makeTypeTuple(bool), makeTypeTuple(u32)) ~>
+      setBuiltInFunctionInTypeCheckScope(booltou64, makeTypeTuple(bool), makeTypeTuple(u64)) ~>
+      setBuiltInFunctionInTypeCheckScope(s256tobool, makeTypeTuple(s256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(s256tou256, makeTypeTuple(s256), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(s256tou32, makeTypeTuple(s256), makeTypeTuple(u32)) ~>
+      setBuiltInFunctionInTypeCheckScope(s256tou64, makeTypeTuple(s256), makeTypeTuple(u64)) ~>
+      setBuiltInFunctionInTypeCheckScope(u256tobool, makeTypeTuple(u256), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(u256tos256, makeTypeTuple(u256), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(u256tou32, makeTypeTuple(u256), makeTypeTuple(u32)) ~>
+      setBuiltInFunctionInTypeCheckScope(u256tou64, makeTypeTuple(u256), makeTypeTuple(u64)) ~>
+      setBuiltInFunctionInTypeCheckScope(u32tobool, makeTypeTuple(u32), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(u32tos256, makeTypeTuple(u32), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(u32tou256, makeTypeTuple(u32), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(u32tou64, makeTypeTuple(u32), makeTypeTuple(u64)) ~>
+      setBuiltInFunctionInTypeCheckScope(u64tobool, makeTypeTuple(u64), makeTypeTuple(bool)) ~>
+      setBuiltInFunctionInTypeCheckScope(u64tos256, makeTypeTuple(u64), makeTypeTuple(s256)) ~>
+      setBuiltInFunctionInTypeCheckScope(u64tou256, makeTypeTuple(u64), makeTypeTuple(u256)) ~>
+      setBuiltInFunctionInTypeCheckScope(u64tou32, makeTypeTuple(u64), makeTypeTuple(u32))
     )
-
-  /**
-   * mergeTypeTuples
-   */
-
-  syntax TypeTuple ::=
-    mergeTypeTuples(TypeTuple, TypeTuple) [function]
-
-  rule
-    mergeTypeTuples(TypeTuple(I1:Int, L1:List), TypeTuple(I2:Int, L2:List)) =>
-    TypeTuple(I1 +Int I2, L1 L2)
-
-  /**
-   * getTypedIdentifierListTypeTuple
-   */
-
-  syntax TypeTuple ::=
-    getTypedIdentifierListTypeTuple(List) [function]
-
-  rule
-    getTypedIdentifierListTypeTuple(.List) =>
-    makeTypeTuple()
-
-  rule
-    getTypedIdentifierListTypeTuple(
-      ListItem(AstTypedIdentifier(I:Identifier, TN:TypeName)) TIL:List
-    ) =>
-    mergeTypeTuples(TypeTuple(1, ListItem(TN)), getTypedIdentifierListTypeTuple(TIL))
+  /* lint:enable */
 
 endmodule

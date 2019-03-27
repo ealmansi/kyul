@@ -1,4 +1,0 @@
-#AstBlock ListItem ( #AstVariableDeclaration2 ListItem ( #AstTypedIdentifier x u256 ) #AstTypedLiteral 3 u256 )
-    ListItem ( #AstVariableDeclaration2 ListItem ( #AstTypedIdentifier y u256 ) #AstFunctionCall addu256 ListItem ( x )
-    ListItem ( x ) )
-    ListItem ( #AstDebug y )
