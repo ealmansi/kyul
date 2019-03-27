@@ -17,13 +17,13 @@ module YUL-TYPE-CHECK
    */
 
   syntax TypeCheckError ::=
-    TypeCheckErrorExpressionHasWrongType() |
-    TypeCheckErrorFunctionAlreadyDefined() |
-    TypeCheckErrorFunctionIsUndefined() |
-    TypeCheckErrorInvalidFunctionCall(Int, Int) |
-    TypeCheckErrorVariableAlreadyDefined() |
+    TypeCheckErrorExpressionHasWrongType(AstExpression) |
+    TypeCheckErrorFunctionAlreadyDefined(Identifier) |
+    TypeCheckErrorFunctionIsUndefined(Identifier) |
+    TypeCheckErrorInvalidFunctionCall() |
+    TypeCheckErrorVariableAlreadyDefined(Identifier) |
     TypeCheckErrorVariableIsNotAccessible() |
-    TypeCheckErrorVariableIsUndefined()
+    TypeCheckErrorVariableIsUndefined(Identifier)
 
   rule
     E:TypeCheckError ~> KI:KItem =>
@@ -121,19 +121,19 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     checkFunctionNotInTypeCheckScope(Identifier) |
-    checkFunctionNotInTypeCheckScope(Hole)
+    checkFunctionNotInTypeCheckScopeAux(Identifier)
 
   rule
     checkFunctionNotInTypeCheckScope(I:Identifier) =>
-    lookupFunctionInTypeCheckScope(I) ~> checkFunctionNotInTypeCheckScope(HOLE)
+    lookupFunctionInTypeCheckScope(I) ~> checkFunctionNotInTypeCheckScopeAux(I)
 
   rule
-    Nothing() ~> checkFunctionNotInTypeCheckScope(HOLE) =>
+    Nothing() ~> checkFunctionNotInTypeCheckScopeAux(_:Identifier) =>
     .
 
   rule
-    Just(_:TypeCheckFunctionAttributes) ~> checkFunctionNotInTypeCheckScope(HOLE) =>
-    TypeCheckErrorFunctionAlreadyDefined()
+    Just(_:TypeCheckFunctionAttributes) ~> checkFunctionNotInTypeCheckScopeAux(I:Identifier) =>
+    TypeCheckErrorFunctionAlreadyDefined(I)
 
   /**
    * typecheckStatement
@@ -192,14 +192,19 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     typecheckAssignment(AstAssignment) |
-    typecheckAssignment(Hole, AstExpression)
+    typecheckAssignmentAux(Hole, AstExpression) |
+    typecheckAssignmentAux(TypeTuple, AstExpression)
 
   rule
     typecheckAssignment(AstAssignment(IL:List, E:AstExpression)) =>
-    inferTypeIdentifierList(IL) ~> typecheckAssignment(HOLE, E)
+    inferTypeIdentifierList(IL) ~> typecheckAssignmentAux(HOLE, E)
 
   rule
-    TT:TypeTuple ~> typecheckAssignment(HOLE, E:AstExpression) =>
+    TT:TypeTuple ~> typecheckAssignmentAux(HOLE, E:AstExpression) =>
+    typecheckAssignmentAux(TT, E)
+
+  rule
+    typecheckAssignmentAux(TT:TypeTuple, E:AstExpression) =>
     typecheckExpression(E, TT)
 
   /**
@@ -208,7 +213,9 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     inferTypeIdentifierList(List) |
-    inferTypeIdentifierList(Hole)
+    inferTypeIdentifierListAux(Hole, List) |
+    inferTypeIdentifierListAux(TypeTuple, Hole) |
+    inferTypeIdentifierListAux(TypeTuple, TypeTuple)
 
   rule
     inferTypeIdentifierList(.List) =>
@@ -216,14 +223,18 @@ module YUL-TYPE-CHECK
 
   rule
     inferTypeIdentifierList(ListItem(I:Identifier) IL:List) =>
-    inferTypeIdentifierList(IL) ~> I ~> inferTypeIdentifierList(HOLE)
+    inferTypeExpression(I) ~> inferTypeIdentifierListAux(HOLE, IL)
 
   rule
-    TT:TypeTuple ~> I:Identifier ~> inferTypeIdentifierList(HOLE) =>
-    inferTypeExpression(I) ~> TT ~> inferTypeIdentifierList(HOLE)
+    TT:TypeTuple ~> inferTypeIdentifierListAux(HOLE, IL:List) =>
+    inferTypeIdentifierList(IL) ~> inferTypeIdentifierListAux(TT, HOLE)
 
   rule
-    TT1:TypeTuple ~> TT2:TypeTuple ~> inferTypeIdentifierList(HOLE) =>
+    TT1:TypeTuple ~> inferTypeIdentifierListAux(TT2:TypeTuple, HOLE) =>
+    inferTypeIdentifierListAux(TT2, TT1)
+
+  rule
+    inferTypeIdentifierListAux(TT1:TypeTuple, TT2:TypeTuple) =>
     mergeTypeTuples(TT1, TT2)
 
   /**
@@ -232,19 +243,24 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     typecheckExpression(AstExpression, TypeTuple) |
-    typecheckExpression(Hole, TypeTuple)
+    typecheckExpressionAux(AstExpression, Hole, TypeTuple) |
+    typecheckExpressionAux(AstExpression, TypeTuple, TypeTuple)
 
   rule
     typecheckExpression(E:AstExpression, TT:TypeTuple) =>
-    inferTypeExpression(E) ~> typecheckExpression(HOLE, TT)
+    inferTypeExpression(E) ~> typecheckExpressionAux(E, HOLE, TT)
 
   rule
-    TT1:TypeTuple ~> typecheckExpression(HOLE, TT2:TypeTuple) =>
-    TypeCheckErrorExpressionHasWrongType()
+    TT1:TypeTuple ~> typecheckExpressionAux(E:AstExpression, HOLE, TT2:TypeTuple) =>
+    typecheckExpressionAux(E, TT1, TT2)
+
+  rule
+    typecheckExpressionAux(E:AstExpression, TT1:TypeTuple, TT2:TypeTuple) =>
+    TypeCheckErrorExpressionHasWrongType(E)
     requires TT1 =/=K TT2
 
   rule
-    TT1:TypeTuple ~> typecheckExpression(HOLE, TT2:TypeTuple) =>
+    typecheckExpressionAux(_:AstExpression, TT1:TypeTuple, TT2:TypeTuple) =>
     .
     requires TT1 ==K TT2
 
@@ -284,20 +300,20 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     inferTypeExpressionFunctionCall(AstFunctionCall) |
-    inferTypeExpressionFunctionCall(Hole, List)
+    inferTypeExpressionFunctionCallAux(Identifier, List)
 
   rule
     inferTypeExpressionFunctionCall(AstFunctionCall(I:Identifier, EL:List)) =>
-    lookupFunctionInTypeCheckScope(I) ~> inferTypeExpressionFunctionCall(HOLE, EL)
+    lookupFunctionInTypeCheckScope(I) ~> inferTypeExpressionFunctionCallAux(I, EL)
 
   rule
-    Nothing() ~> inferTypeExpressionFunctionCall(HOLE, EL:List) =>
-    TypeCheckErrorFunctionIsUndefined()
+    Nothing() ~> inferTypeExpressionFunctionCallAux(I:Identifier, _:List) =>
+    TypeCheckErrorFunctionIsUndefined(I)
 
   rule
     (
       Just(TypeCheckFunctionAttributes(TypeFunction(TT1:TypeTuple, TT2:TypeTuple))) ~>
-      inferTypeExpressionFunctionCall(HOLE, EL:List)
+      inferTypeExpressionFunctionCallAux(_:Identifier, EL:List)
     ) =>
     (
       typecheckFunctionArguments(EL, TT1) ~>
@@ -312,13 +328,16 @@ module YUL-TYPE-CHECK
     typecheckFunctionArguments(List, TypeTuple)
 
   rule
-    typecheckFunctionArguments(EL:List, TypeTuple(I:Int, _:List)) =>
-    TypeCheckErrorInvalidFunctionCall(size(EL), I)
-    requires size(EL) =/=Int I
-
-  rule
     typecheckFunctionArguments(.List, TypeTuple(0, .List)) =>
     .
+
+  rule
+    typecheckFunctionArguments(ListItem(_:AstExpression) _:List, TypeTuple(0, .List)) =>
+    TypeCheckErrorInvalidFunctionCall()
+
+  rule
+    typecheckFunctionArguments(.List, TypeTuple(_:Int, ListItem(_:Type) _:List)) =>
+    TypeCheckErrorInvalidFunctionCall()
 
   rule
     typecheckFunctionArguments(
@@ -336,26 +355,26 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     inferTypeExpressionIdentifier(Identifier) |
-    inferTypeExpressionIdentifier(Hole)
+    inferTypeExpressionIdentifierAux(Identifier)
 
   rule
     inferTypeExpressionIdentifier(I:Identifier) =>
-    lookupVariableInTypeCheckScope(I) ~> inferTypeExpressionIdentifier(HOLE)
+    lookupVariableInTypeCheckScope(I) ~> inferTypeExpressionIdentifierAux(I)
 
   rule
-    Nothing() ~> inferTypeExpressionIdentifier(HOLE) =>
-    TypeCheckErrorVariableIsUndefined()
+    Nothing() ~> inferTypeExpressionIdentifierAux(I:Identifier) =>
+    TypeCheckErrorVariableIsUndefined(I)
 
   rule
     Just(
       TypeCheckVariableAttributes(_:Type, TypeCheckVariableAccessNone())
-    ) ~> inferTypeExpressionIdentifier(HOLE) =>
+    ) ~> inferTypeExpressionIdentifierAux(_:Identifier) =>
     TypeCheckErrorVariableIsNotAccessible()
 
   rule
     Just(
       TypeCheckVariableAttributes(T:Type, TypeCheckVariableAccessReadWrite())
-    ) ~> inferTypeExpressionIdentifier(HOLE) =>
+    ) ~> inferTypeExpressionIdentifierAux(_:Identifier) =>
     makeTypeTuple(T)
 
   /**
@@ -364,14 +383,14 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     typecheckDebug(AstDebug) |
-    typecheckDebug(Hole)
+    typecheckDebugAux()
 
   rule
     typecheckDebug(AstDebug(I:Identifier)) =>
-    inferTypeExpression(I) ~> typecheckDebug(HOLE)
+    inferTypeExpression(I) ~> typecheckDebugAux()
 
   rule
-    _:TypeTuple ~> typecheckDebug(HOLE) =>
+    _:TypeTuple ~> typecheckDebugAux() =>
     .
 
   /**
@@ -443,7 +462,8 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     typecheckSwitch(AstSwitch) |
-    typecheckSwitch(Hole, List, AstDefault)
+    typecheckSwitchAux(Hole, List, AstDefault) |
+    typecheckSwitchAux(TypeTuple, List, AstDefault)
 
   rule
     typecheckSwitch(AstSwitch1(E:AstExpression, CS:List)) =>
@@ -451,10 +471,14 @@ module YUL-TYPE-CHECK
 
   rule
     typecheckSwitch(AstSwitch2(E:AstExpression, CS:List, D:AstDefault)) =>
-    inferTypeExpression(E) ~> typecheckSwitch(HOLE, CS, D)
+    inferTypeExpression(E) ~> typecheckSwitchAux(HOLE, CS, D)
 
   rule
-    TT:TypeTuple ~> typecheckSwitch(HOLE, CS:List, D:AstDefault) =>
+    TT:TypeTuple ~> typecheckSwitchAux(HOLE, CS:List, D:AstDefault) =>
+    typecheckSwitchAux(TT, CS, D)
+
+  rule
+    typecheckSwitchAux(TT, CS, D) =>
     (
       typecheckCaseSequence(CS, TT) ~>
       typecheckDefault(D)
@@ -551,19 +575,24 @@ module YUL-TYPE-CHECK
 
   syntax KItem ::=
     checkVariableNotInTypeCheckScope(Identifier) |
-    checkVariableNotInTypeCheckScope(Hole)
+    checkVariableNotInTypeCheckScopeAux(Identifier, Hole) |
+    checkVariableNotInTypeCheckScopeAux(Identifier, Maybe)
 
   rule
     checkVariableNotInTypeCheckScope(I:Identifier) =>
-    lookupVariableInTypeCheckScope(I) ~> checkVariableNotInTypeCheckScope(HOLE)
+    lookupVariableInTypeCheckScope(I) ~> checkVariableNotInTypeCheckScopeAux(I, HOLE)
 
   rule
-    Nothing() ~> checkVariableNotInTypeCheckScope(HOLE) =>
+    M:Maybe ~> checkVariableNotInTypeCheckScopeAux(I:Identifier, HOLE) =>
+    checkVariableNotInTypeCheckScopeAux(I, M)
+
+  rule
+    checkVariableNotInTypeCheckScopeAux(_:Identifier, Nothing()) =>
     .
 
   rule
-    Just(_:TypeCheckVariableAttributes) ~> checkVariableNotInTypeCheckScope(HOLE) =>
-    TypeCheckErrorVariableAlreadyDefined()
+    checkVariableNotInTypeCheckScopeAux(I:Identifier, Just(_:TypeCheckVariableAttributes)) =>
+    TypeCheckErrorVariableAlreadyDefined(I)
 
   /**
    * typecheckObject

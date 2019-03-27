@@ -1,0 +1,6 @@
+{
+  function fn () {}
+  {
+    function fn () {}
+  }
+}
