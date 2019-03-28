@@ -5,7 +5,6 @@ Yul, the intermediate language for Ethereum, implemented in [K Framework](https:
 - Syntax:
   - Hex literals.
   - Check [grammar restrictions](https://solidity.readthedocs.io/en/v0.5.5/yul.html#restrictions-on-the-grammar).
-- Type checking.
 - Semantics: [Yul object](https://solidity.readthedocs.io/en/v0.5.5/yul.html#specification-of-yul-object).
 - [Low-level functions](https://solidity.readthedocs.io/en/v0.5.5/yul.html#low-level-functions):
   - Arithmetic bitwise operations.
