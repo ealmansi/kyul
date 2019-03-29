@@ -64,10 +64,6 @@
     true:bool
   )
   assertEqualBool(
-    s256tobool(0:s256),
-    false:bool
-  )
-  assertEqualBool(
     s256tobool(1:s256),
     true:bool
   )

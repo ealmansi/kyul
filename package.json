@@ -12,7 +12,8 @@
     "kprove": "kprove --debug --directory src/yul/ --def-module YUL --spec-module SPEC",
     "krun": "krun --directory src/yul/",
     "pretest": "node util/lint.js src/",
-    "test": "mocha"
+    "test": "mocha",
+    "test:light": "YUL_TEST_SUITE=light mocha"
   },
   "devDependencies": {
     "glob": "7.1.3",

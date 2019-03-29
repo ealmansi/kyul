@@ -1,9 +1,5 @@
 {
   assertEqualBool(
-    u256tobool(0:u256),
-    false:bool
-  )
-  assertEqualBool(
     u256tobool(1:u256),
     true:bool
   )

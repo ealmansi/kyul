@@ -1,37 +1,9 @@
 {
-  assertEqualU32(
-    booltou32(false:bool),
-    0:u32
+  assertEqualBool(
+    u256tobool(0:u256),
+    false:bool
   )
-  assertEqualU32(
-    booltou32(true:bool),
-    1:u32
-  )
-  assertEqualU64(
-    booltou64(false:bool),
-    0:u64
-  )
-  assertEqualU64(
-    booltou64(true:bool),
-    1:u64
-  )
-  assertEqualU256(
-    booltou256(false:bool),
-    0:u256
-  )
-  assertEqualU256(
-    booltou256(true:bool),
-    1:u256
-  )
-  assertEqualS256(
-    booltos256(false:bool),
-    0:s256
-  )
-  assertEqualS256(
-    booltos256(true:bool),
-    1:s256
-  )
-
+  
   function assert (c:bool) { if not(c) { abort() } }
   function assertEqualBool (a:bool, b:bool) { assert(not(xor(a, b))) }
   function assertEqualS256 (a:s256, b:s256) { assert(eqS256(a, b)) }
