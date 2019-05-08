@@ -376,48 +376,48 @@ module YUL-EVALUATION
     evaluateExpressionTypedLiteral(AstTypedLiteral)
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LB:Bool}:>LiteralBool, bool)) =>
-    makeValueTuple(ValueBool(LB))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(B:Bool, bool)) =>
+    makeValueTuple(ValueBool(B))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, u8)) =>
-    makeValueTuple(ValueU8(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, u8)) =>
+    makeValueTuple(ValueU8(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, u32)) =>
-    makeValueTuple(ValueU32(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, u32)) =>
+    makeValueTuple(ValueU32(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, u64)) =>
-    makeValueTuple(ValueU64(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, u64)) =>
+    makeValueTuple(ValueU64(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, u128)) =>
-    makeValueTuple(ValueU128(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, u128)) =>
+    makeValueTuple(ValueU128(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, u256)) =>
-    makeValueTuple(ValueU256(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, u256)) =>
+    makeValueTuple(ValueU256(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, s8)) =>
-    makeValueTuple(ValueS8(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, s8)) =>
+    makeValueTuple(ValueS8(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, s32)) =>
-    makeValueTuple(ValueS32(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, s32)) =>
+    makeValueTuple(ValueS32(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, s64)) =>
-    makeValueTuple(ValueS64(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, s64)) =>
+    makeValueTuple(ValueS64(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, s128)) =>
-    makeValueTuple(ValueS128(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, s128)) =>
+    makeValueTuple(ValueS128(I))
 
   rule
-    evaluateExpressionTypedLiteral(AstTypedLiteral({LNI:Int}:>LiteralNumberInt, s256)) =>
-    makeValueTuple(ValueS256(LNI))
+    evaluateExpressionTypedLiteral(AstTypedLiteral(I:Int, s256)) =>
+    makeValueTuple(ValueS256(I))
 
   /**
    * evaluateExpressionIdentifier
